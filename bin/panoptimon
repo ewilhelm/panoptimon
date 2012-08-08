@@ -1,0 +1,38 @@
+#!/usr/bin/ruby
+
+# Panoptimon - The All-Seeing System Monitor Daemon
+
+# copyright 2012 Eric L. Wilhelm
+
+require 'optparse'
+require 'ostruct'
+require 'json'
+
+require 'rubygems'
+require 'daemons'
+require 'eventmachine'
+
+def load_options
+  defaults = {
+    :daemonize      => true,
+    :config_dir     => '/etc/panoptimon/',
+    :config_file    => '/etc/panoptimon/.panoptimon',
+    :collectors_dir => '%/collectors',
+    :plugins_dir    => '%/plugins',
+    :collector_timeout  => 120,
+    :collector_interval => 60,
+  }
+
+  options = {}
+
+  config = options[:config_file] == '-' ? {} : JSON.parse(
+    File.read(options[:config_file] || defaults[:config_file])
+  )
+  puts config;
+
+  return OpenStruct.new(config.merge(options)).freeze
+end
+
+load_options()
+
+# vim:ts=2:sw=2:et:sta
