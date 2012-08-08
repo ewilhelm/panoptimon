@@ -23,14 +23,23 @@ def load_options
     :collector_interval => 60,
   }
 
-  options = {}
+  options = {:config_file => '-'} # XXX
 
-  config = options[:config_file] == '-' ? {} : JSON.parse(
-    File.read(options[:config_file] || defaults[:config_file])
-  )
-  puts config;
+  config = defaults.merge!(
+    options[:config_file] == '-' ? {} : JSON.parse(
+      File.read(options[:config_file] || defaults[:config_file])
+    )
+  ).merge!(options);
 
-  return OpenStruct.new(config.merge(options)).freeze
+  #config[:config_dir].sub!(/\/*$/, '/');
+  for d in [:collectors_dir, :plugins_dir]
+    config[d] = File.join(config[:config_dir], config[d]) \
+      if config[d].sub!(/^%\//, '')
+  end
+
+  puts config
+
+  return OpenStruct.new(config).freeze
 end
 
 load_options()
