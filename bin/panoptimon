@@ -79,15 +79,13 @@ def load_options(args)
     )
   ).merge!(options);
 
-  if c = config.delete(:configure)
-    c.each { | k,v| config[k] = v }
-  end
+  (config.delete(:configure) || {}).each { | k,v| config[k] = v }
 
   # these can be relative to config_dir
-  for d in [:collectors_dir, :plugins_dir]
+  [:collectors_dir, :plugins_dir].each { |d|
     config[d] = File.join(config[:config_dir], config[d]) \
       if config[d].sub!(/^%\//, '')
-  end
+  }
 
 
   return OpenStruct.new(config).freeze
