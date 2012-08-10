@@ -114,17 +114,22 @@ opts = load_options(ARGV) or exit
 # XXX needs a real test
 puts "options: ", JSON.pretty_generate(opts.marshal_dump) if opts.debug
 
-(opts.lists || []).uniq.sort.each { |list|
-  dirlist = ->(x) {
-    Pathname.new(x).entries.find_all {|f| f.to_s =~ /\.json$/i}
+if opts.lists
+
+  opts.lists.uniq.sort.each { |list|
+    dirlist = ->(x) {
+      Pathname.new(x).entries.find_all {|f| f.to_s =~ /\.json$/i}
+    }
+    does = {
+      collectors: ->() { dirlist.call(opts.collectors_dir) },
+      plugins:    ->() { dirlist.call(opts.plugins_dir) },
+      roles:      ->() { raise "roles list not implemented" },
+    }
+    puts does[list].call.unshift("#{list}:").join("\n  ");
   }
-  does = {
-    collectors: ->() { dirlist.call(opts.collectors_dir) },
-    plugins:    ->() { dirlist.call(opts.plugins_dir) },
-    roles:      ->() { raise "roles list not implemented" },
-  }
-  puts does[list].call.unshift("#{list}:").join("\n  ");
-}
+
+  exit
+end
 
 
 
