@@ -4,10 +4,12 @@
 
 # copyright 2012 Eric L. Wilhelm
 
+require 'panoptimon'
+
 require 'optparse'
 require 'ostruct'
 require 'json'
-require 'pathname';
+require 'pathname'
 
 require 'rubygems'
 require 'daemons'
@@ -65,13 +67,29 @@ def load_options(args)
       opts.on('--verbose', "Enable verbose output"
       ) { |v| o[:verbose] = v }
 
-      opts.on('-v', '--version', "Print version"
-      ) { raise "version unimplemented" } # TODO
+      opts.separator ""
+      opts.separator "Common options:"
 
+      opts.on_tail('-v', '--version', "Print version"
+      ) { 
+        puts "panoptimon version #{Panoptimon::VERSION}"
+        o[:quit] = true
+        opts.terminate
+      }
+
+      opts.on_tail("-h", "--help", "Show this message"
+      ) {
+        puts opts
+        o[:quit] = true
+        opts.terminate
+      }
 
     end.parse!(args)
+
     return o
   }.call
+
+  return false if options[:quit]
 
   config = defaults.merge(
     options[:config_file].to_s == '' ? {} : JSON.parse(
@@ -91,7 +109,7 @@ def load_options(args)
   return OpenStruct.new(config).freeze
 end
 
-opts = load_options(ARGV)
+opts = load_options(ARGV) or exit
 
 # XXX needs a real test
 puts "options: ", JSON.pretty_generate(opts.marshal_dump) if opts.debug
