@@ -131,11 +131,14 @@ if opts.lists
   exit
 end
 
+# TODO load plugins before daemonize - fatal on errors
 
 if opts.daemonize
-  # todo could possibly use webrick::daemon.start or process.daemon,
+  # TODO could possibly use webrick::daemon.start or process.daemon,
   # but this has support for redirecting io to logfiles... worth it?
   Daemons.daemonize
 end
+
+# TODO load collectors after daemonize - skip + complain
 
 # vim:ts=2:sw=2:et:sta
