@@ -17,7 +17,7 @@ def load_options(args)
   defaults = {
     :daemonize      => true,
     :config_dir     => '/etc/panoptimon/',
-    :config_file    => '/etc/panoptimon/.panoptimon',
+    :config_file    => '/etc/panoptimon/panoptimon.json',
     :collectors_dir => '%/collectors',
     :plugins_dir    => '%/plugins',
     :collector_timeout  => 120,
@@ -73,12 +73,12 @@ def load_options(args)
     return o
   }.call
 
-  config = defaults.merge!(
+  config = defaults.merge(
     options[:config_file].to_s == '' ? {} : JSON.parse(
       File.read(options[:config_file] || defaults[:config_file]),
       {:symbolize_names => true}
     )
-  ).merge!(options);
+  ).merge(options);
 
   (config.delete(:configure) || {}).each { | k,v| config[k] = v }
 
