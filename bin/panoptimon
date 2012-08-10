@@ -12,7 +12,7 @@ require 'rubygems'
 require 'daemons'
 require 'eventmachine'
 
-def load_options
+def load_options(args)
   defaults = {
     :daemonize      => true,
     :config_dir     => '/etc/panoptimon/',
@@ -23,25 +23,80 @@ def load_options
     :collector_interval => 60,
   }
 
-  options = {:config_file => '-'} # XXX
+  options = ->() {
+    o = {}
+    OptionParser.new do |opts|
+
+      opts.on('-c', '--config-file [FILENAME]',
+        "Alternative configuration file (#{defaults[:config_file]})"
+      ) { |v| o[:config_file] = v }
+
+      opts.on('-D', '--[no-]foreground',
+        "Don't daemonize (#{not defaults[:daemonize]})"
+      ) { |v| o[:daemonize] = ! v }
+
+      for x in ['config', 'collectors', 'plugins']; ->() {
+        k = "#{x}_dir".to_sym
+        opts.on("--#{x}-dir [DIR]",
+          "#{x.capitalize} directory (#{defaults[k]})"
+        ) { |v| o[k] = v }
+      }.call; end
+
+      for x in ['collectors', 'plugins', 'roles']
+        opts.on('--list-'+x, "list all #{x} found"
+        ) { raise "--list-#{x} unimplemented" }
+      end
+
+      opts.on('-o', '--configure [X=Y]',
+        'Set configuration values'
+      ) { |x|
+        (k,v) = x.split(/=/, 2)
+        (o[:configure] ||= {})[k.to_sym] = v
+      }
+
+      opts.on('-l', '--location [LOC]', "Set node location"
+        # TODO this feature might be implemented as a plugin
+      ) { raise "--location unimplemented" }
+
+      opts.on('-d', '--debug', "Enable debugging."
+      ) { |v| o[:debug] = v }
+
+      opts.on('--verbose', "Enable verbose output"
+      ) { |v| o[:verbose] = v }
+
+      opts.on('-v', '--version', "Print version"
+      ) { raise "version unimplemented" }
+
+
+    end.parse!(args)
+    return o
+  }.call
+  puts "parsed options #{options}"
 
   config = defaults.merge!(
-    options[:config_file] == '-' ? {} : JSON.parse(
-      File.read(options[:config_file] || defaults[:config_file])
+    options[:config_file].to_s == '' ? {} : JSON.parse(
+      File.read(options[:config_file] || defaults[:config_file]),
+      {:symbolize_names => true}
     )
   ).merge!(options);
 
-  #config[:config_dir].sub!(/\/*$/, '/');
+  if c = config.delete(:configure)
+    c.each { | k,v| config[k] = v }
+  end
+
+  # these can be relative to config_dir
   for d in [:collectors_dir, :plugins_dir]
     config[d] = File.join(config[:config_dir], config[d]) \
       if config[d].sub!(/^%\//, '')
   end
 
-  puts config
 
   return OpenStruct.new(config).freeze
 end
 
-load_options()
+opts = load_options(ARGV)
+
+# XXX needs a real test
+puts "options: ", JSON.pretty_generate(opts.marshal_dump) if opts.debug
 
 # vim:ts=2:sw=2:et:sta
