@@ -35,17 +35,17 @@ def load_options(args)
         "Don't daemonize (#{not defaults[:daemonize]})"
       ) { |v| o[:daemonize] = ! v }
 
-      for x in ['config', 'collectors', 'plugins']; ->() {
+      ['config', 'collectors', 'plugins'].each { |x|
         k = "#{x}_dir".to_sym
         opts.on("--#{x}-dir [DIR]",
           "#{x.capitalize} directory (#{defaults[k]})"
         ) { |v| o[k] = v }
-      }.call; end
+      }
 
-      for x in ['collectors', 'plugins', 'roles']
+      ['collectors', 'plugins', 'roles'].each { |x|
         opts.on('--list-'+x, "list all #{x} found"
         ) { raise "--list-#{x} unimplemented" }
-      end
+      }
 
       opts.on('-o', '--configure [X=Y]',
         'Set configuration values'
@@ -71,7 +71,6 @@ def load_options(args)
     end.parse!(args)
     return o
   }.call
-  puts "parsed options #{options}"
 
   config = defaults.merge!(
     options[:config_file].to_s == '' ? {} : JSON.parse(
@@ -95,6 +94,8 @@ def load_options(args)
 end
 
 opts = load_options(ARGV)
+
+# TODO --list-<foo> actions
 
 # XXX needs a real test
 puts "options: ", JSON.pretty_generate(opts.marshal_dump) if opts.debug
