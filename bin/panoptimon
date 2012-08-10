@@ -7,6 +7,7 @@
 require 'optparse'
 require 'ostruct'
 require 'json'
+require 'pathname';
 
 require 'rubygems'
 require 'daemons'
@@ -42,9 +43,9 @@ def load_options(args)
         ) { |v| o[k] = v }
       }
 
-      ['collectors', 'plugins', 'roles'].each { |x|
-        opts.on('--list-'+x, "list all #{x} found"
-        ) { raise "--list-#{x} unimplemented" }
+      [:collectors, :plugins, :roles].each { |x|
+        opts.on('--list-'+x.to_s, "list all #{x} found"
+        ) { (o[:lists] ||= []).push(x) }
       }
 
       opts.on('-o', '--configure [X=Y]',
@@ -65,7 +66,7 @@ def load_options(args)
       ) { |v| o[:verbose] = v }
 
       opts.on('-v', '--version', "Print version"
-      ) { raise "version unimplemented" }
+      ) { raise "version unimplemented" } # TODO
 
 
     end.parse!(args)
@@ -87,15 +88,26 @@ def load_options(args)
       if config[d].sub!(/^%\//, '')
   }
 
-
   return OpenStruct.new(config).freeze
 end
 
 opts = load_options(ARGV)
 
-# TODO --list-<foo> actions
-
 # XXX needs a real test
 puts "options: ", JSON.pretty_generate(opts.marshal_dump) if opts.debug
+
+(opts.lists || []).uniq.sort.each { |list|
+  dirlist = ->(x) {
+    Pathname.new(x).entries.find_all {|f| f.to_s =~ /\.json$/i}
+  }
+  does = {
+    collectors: ->() { dirlist.call(opts.collectors_dir) },
+    plugins:    ->() { dirlist.call(opts.plugins_dir) },
+    roles:      ->() { raise "roles list not implemented" },
+  }
+  puts does[list].call.unshift("#{list}:").join("\n  ");
+}
+
+
 
 # vim:ts=2:sw=2:et:sta
