@@ -21,7 +21,8 @@ def self.load_options (args)
     OptionParser.new do |opts|
 
       opts.on('-c', '--config-file [FILENAME]',
-        "Alternative configuration file (#{defaults[:config_file]})"
+        "Alternative configuration file ",
+        "(#{defaults[:config_file]})"
       ) { |v| o[:config_file] = v }
 
       opts.on('-D', '--[no-]foreground',
