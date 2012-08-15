@@ -1,4 +1,10 @@
-require "panoptimon/version"
+require 'panoptimon/version'
+
+require 'optparse'
+
+require 'rubygems'
+require 'eventmachine'
+require 'panoptimon/eventmonkeypatch/popen3.rb'
 
 module Panoptimon
 

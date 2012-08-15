@@ -6,7 +6,6 @@
 
 require 'panoptimon'
 
-require 'optparse'
 require 'ostruct'
 require 'json'
 require 'pathname'
