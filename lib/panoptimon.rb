@@ -29,7 +29,7 @@ def self.load_options (args)
       opts.on('-c', '--config-file [FILENAME]',
         "Alternative configuration file ",
         "(#{defaults[:config_file]})"
-      ) { |v| o[:config_file] = v }
+      ) { |v| o[:config_file] = v.nil? ? '' : v }
 
       opts.on('-D', '--[no-]foreground',
         "Don't daemonize (#{not defaults[:daemonize]})"
@@ -89,7 +89,7 @@ def self.load_options (args)
   return false if options[:quit]
 
   config = defaults.merge(
-    options[:config_file].to_s == '' ? {} : JSON.parse(
+    options[:config_file] == '' ? {} : JSON.parse(
       File.read(options[:config_file] || defaults[:config_file]),
       {:symbolize_names => true}
     )
