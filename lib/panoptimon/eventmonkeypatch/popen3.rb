@@ -15,12 +15,18 @@ module EventMachine
  
   def self.popen3(*args)
     original_stderr = $stderr.dup
-    read, write = IO.pipe
-    $stderr.reopen(write)
-    connection = EM.popen(*args)
-    $stderr.reopen(original_stderr)
-    EM.attach(read, StderrHandler, connection)
-    yield(connection) if block_given?
-    connection
+    begin
+      read, write = IO.pipe
+      $stderr.reopen(write)
+      connection = EM.popen(*args)
+      $stderr.reopen(original_stderr)
+      EM.attach(read, StderrHandler, connection)
+      yield(connection) if block_given?
+      connection
+    rescue
+      $stderr.reopen(original_stderr)
+      raise $!
+    end
+
   end
 end
