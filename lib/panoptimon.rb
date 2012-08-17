@@ -1,4 +1,5 @@
 require 'panoptimon/version'
+require 'panoptimon/collector'
 
 require 'optparse'
 
