@@ -34,10 +34,14 @@ module CollectorSink
     puts "incoming"
     @buf ||= BufferedTokenizer.new("\n")
     @buf.extract(data).each do |line|
-      # TODO 1. assume each line is a parsable json chunk?
-      #      2. feed back to monitor object: bus.notify(msg)
+      begin
+        data = JSON.parse(line)
+      rescue
+        # TODO feed errors up to the monitor
+        puts "error parsing #{line.dump} - #{$!}"
+      end
       puts "line: #{line}"
-      @handler.bus.notify(line)
+      @handler.bus.notify(data)
     end
   end
 

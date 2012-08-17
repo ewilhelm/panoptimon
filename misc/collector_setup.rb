@@ -4,7 +4,7 @@ require 'panoptimon'
 
 count = 0
 duck = EM.spawn { |metric|
-  puts "metric: #{metric.dump}"
+  puts "metric: #{metric.inspect}"
   count += 1
   EM.stop if count >= 3
 }
