@@ -23,7 +23,7 @@ class Collector
     }
   end
 
-  def is_running?
+  def running?
     @child.nil? ? false : true
   end
 

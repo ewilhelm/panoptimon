@@ -16,5 +16,5 @@ puts "collector: #{c.inspect}"
 
 EM.run {
   c.run
-  EM.add_periodic_timer(1) { puts "running: #{c.is_running?}" }
+  EM.add_periodic_timer(1) { puts "running: #{c.running?}" }
 }
