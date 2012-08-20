@@ -7,7 +7,7 @@ class Collector
   include Panoptimon::Logger
 
   attr_reader :cmd, :config, :bus
-  def initialize(bus, cmd, config = {})
+  def initialize (bus, cmd, config = {})
     (@cmd, @config, @bus) = cmd, config, bus
   end
 
@@ -35,7 +35,7 @@ module CollectorSink
     @handler = handler
   end
 
-  def receive_data data
+  def receive_data (data)
     @handler.logger.debug "incoming"
     @buf ||= BufferedTokenizer.new("\n")
     @buf.extract(data).each do |line|
@@ -50,7 +50,7 @@ module CollectorSink
     end
   end
 
-  def receive_stderr mess
+  def receive_stderr (mess)
     # TODO handler.noise ... ?
     @handler.logger.warn "stderr noise #{mess}"
     (@err_mess ||= '') << mess
