@@ -4,6 +4,8 @@ require 'json';
 
 class Collector
 
+  include Panoptimon::Logger
+
   attr_reader :cmd, :config, :bus
   def initialize(bus, cmd, config = {})
     (@cmd, @config, @bus) = cmd, config, bus
@@ -15,7 +17,10 @@ class Collector
 
     # puts "command: #{cmd}" # TODO logging
     (@child = EM.popen3(cmd, CollectorSink, self)
-    ).on_unbind { @child = nil }
+    ).on_unbind { |status|
+      logger.debug "unbind #{status}"
+      @child = nil
+    }
   end
 
   def is_running?
@@ -31,30 +36,28 @@ module CollectorSink
   end
 
   def receive_data data
-    puts "incoming"
+    @handler.logger.debug "incoming"
     @buf ||= BufferedTokenizer.new("\n")
     @buf.extract(data).each do |line|
       begin
         data = JSON.parse(line)
       rescue
         # TODO feed errors up to the monitor
-        puts "error parsing #{line.dump} - #{$!}"
+        $stderr.puts "error parsing #{line.dump} - #{$!}"
       end
-      puts "line: #{line}"
+      @handler.logger.debug "line: #{line}"
       @handler.bus.notify(data)
     end
   end
 
   def receive_stderr mess
-    puts "stderr noise #{mess}"
+    # TODO handler.noise ... ?
+    @handler.logger.warn "stderr noise #{mess}"
     (@err_mess ||= '') << mess
   end
 
   def on_unbind (&block); @on_unbind = block; end
-  def unbind
-    puts "unbind #{get_status.exitstatus}"
-    @on_unbind.call
-  end
+  def unbind; @on_unbind.call(get_status.exitstatus); end
 
 end
 
