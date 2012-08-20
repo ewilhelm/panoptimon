@@ -6,14 +6,18 @@ class Collector
 
   include Panoptimon::Logger
 
-  attr_reader :cmd, :config, :bus
+  attr_reader :cmd, :config, :bus, :last_run_time, :interval
   def initialize (bus, cmd, config = {})
     (@cmd, @config, @bus) = cmd, config, bus
+    @interval = config[:interval] || 60
+    @last_run_time = Time.at(-config[:interval])
   end
 
   def run
     # TODO always append config to arguments vs not / .sub?
     cmd = "#{@cmd} '#{JSON.generate(config)}'"
+
+    @last_run_time = Time.now # TODO .to_i ?
 
     # puts "command: #{cmd}" # TODO logging
     (@child = EM.popen3(cmd, CollectorSink, self)
