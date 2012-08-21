@@ -8,7 +8,6 @@ class Monitor
   def initialize (args)
     @collectors = []
     args.each { |k,v| instance_variable_set("@#{k}", v) }
-    logger.level = ::Logger::DEBUG
   end
 
   def _dirjson (x)
