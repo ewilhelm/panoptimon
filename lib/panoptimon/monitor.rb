@@ -38,7 +38,8 @@ class Monitor
       }
     }
     EM.next_tick(&runall)
-    minterval = 60 # XXX collectors.map{|c| c.interval}.min
+    minterval = collectors.map{|c| c.interval}.min
+    logger.debug "minimum: #{minterval}"
     EM.add_periodic_timer(minterval, &runall);
   end
 
