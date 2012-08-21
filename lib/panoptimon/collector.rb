@@ -15,11 +15,13 @@ class Collector
 
   def run
     # TODO always append config to arguments vs not / .sub?
-    cmd = "#{@cmd} '#{JSON.generate(config)}'"
+    cmd = Shellwords.shelljoin(
+      Shellwords.shellsplit(@cmd) + [JSON.generate(config)]
+    )
 
     @last_run_time = Time.now # TODO .to_i ?
 
-    # puts "command: #{cmd}" # TODO logging
+    logger.info {"run command: #{Shellwords.shellsplit(cmd)}"}
     (@child = EM.popen3(cmd, CollectorSink, self)
     ).on_unbind { |status|
       logger.debug "unbind #{status}"

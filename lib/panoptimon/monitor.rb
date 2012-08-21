@@ -29,11 +29,11 @@ class Monitor
   def run
 
     runall = ->() {
-      logger.info "beep"
+      logger.debug "beep"
       collectors.each {|c|
-        logger.info "run time: #{c.last_run_time}"
+        logger.info "#{c.cmd} (#{c.running? ? 'on ' : 'off'
+          }) last run time: #{c.last_run_time}"
         next if c.last_run_time + c.interval > Time.now or c.running?
-        logger.info "run #{c.cmd}"
         c.run
       }
     }
