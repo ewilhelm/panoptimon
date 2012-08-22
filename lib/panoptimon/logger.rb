@@ -8,8 +8,10 @@ module Panoptimon::Logger
 
   def self.logger
     @logger ||= Logger.new($stderr).tap {|l|
-      # TODO env setting log level?
-      l.level = Logger::WARN}
+      env_l = ENV.delete('LOG_LEVEL')
+      l.level = env_l.nil? ?
+        Logger::WARN : Logger.const_get(env_l.upcase)
+    }
   end
 
 end
