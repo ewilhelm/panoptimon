@@ -9,10 +9,10 @@ duck = EM.spawn { |metric|
   EM.stop if count >= 500
 }
 
-c = Panoptimon::Collector.new(duck,
-  'sample_configs/1/collectors/clock/clock',
-  # %q{echo -e '{"everythings_ok" : 1}\n\c' },
-  {:interval => 0.5})
+c = Panoptimon::Collector.new(bus: duck,
+  command: 'sample_configs/1/collectors/clock/clock',
+  # command: %q{echo -e '{"everythings_ok" : 1}\n\c' },
+  config: {:interval => 0.5})
 
 puts "collector: #{c.inspect}"
 #c.logger.level = ::Logger::DEBUG

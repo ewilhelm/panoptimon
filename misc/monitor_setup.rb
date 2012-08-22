@@ -11,12 +11,12 @@ bus = EM.spawn { |metric|
 
 m = Panoptimon::Monitor.new(
   :collectors => [
-    Panoptimon::Collector.new(bus,
-      'sample_configs/1/collectors/clock/clock',
-      {:interval => 0.5}),
-    Panoptimon::Collector.new(bus,
-      %q{echo -e '{"everythings_ok" : 1}\n\c' },
-      {:interval => 0.03})
+    Panoptimon::Collector.new(bus: bus,
+      command: 'sample_configs/1/collectors/clock/clock',
+      config: {:interval => 0.5}),
+    Panoptimon::Collector.new(bus: bus,
+      command: %q{echo -e '{"everythings_ok" : 1}\n\c' },
+      config: {:interval => 0.03})
   ]
 )
 
