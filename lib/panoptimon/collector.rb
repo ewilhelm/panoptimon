@@ -8,21 +8,19 @@ class Collector
 
   attr_reader :cmd, :config, :bus, :last_run_time, :interval
   def initialize (bus, cmd, config = {})
-    (@cmd, @config, @bus) = cmd, config, bus
+    @cmd = cmd.class == Array ? cmd : Shellwords.shellsplit(cmd)
+    (@config, @bus) = config, bus
     @interval = config[:interval] || 60
     @last_run_time = Time.at(-config[:interval])
   end
 
   def run
-    # TODO always append config to arguments vs not / .sub?
-    cmd = Shellwords.shelljoin(
-      Shellwords.shellsplit(@cmd) + [JSON.generate(config)]
-    )
+    cmdc = @cmd + [JSON.generate(config)]
 
     @last_run_time = Time.now # TODO .to_i ?
 
-    logger.info {"run command: #{Shellwords.shellsplit(cmd)}"}
-    (@child = EM.popen3(cmd, CollectorSink, self)
+    logger.info {"run command: #{cmdc}"}
+    (@child = EM.popen3b(cmdc, CollectorSink, self)
     ).on_unbind { |status|
       logger.debug "unbind #{status}"
       @child = nil
