@@ -39,9 +39,13 @@ end
 # TODO load plugins before daemonize - fatal on errors
 
 if opts.daemonize
+  # TODO must remember cwd and/or make config values into absolute paths?
+  #      (Pathname...realpath?)
   # TODO could possibly use webrick::daemon.start or process.daemon,
   # but this has support for redirecting io to logfiles... worth it?
-  Daemons.daemonize
+  Daemons.daemonize(
+    app_name: Pathname.new($0).basename.to_s,
+    log_output: true)
 end
 
 # TODO load collectors after daemonize - skip + complain
