@@ -8,6 +8,10 @@ class Monitor
   def initialize (args)
     @collectors = []
     args.each { |k,v| instance_variable_set("@#{k}", v) }
+
+    @bus = EM.spawn { |metric|
+      logger.debug "metric: #{metric.inspect}"
+    }
   end
 
   def _dirjson (x)
