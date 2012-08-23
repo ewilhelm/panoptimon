@@ -16,18 +16,18 @@ require 'eventmachine'
 
 opts = Panoptimon.load_options(ARGV) or exit
 
+monitor = Panoptimon::Monitor.new(config: opts)
+monitor.logger.level = ::Logger::DEBUG if opts.debug
+
 # XXX needs a real test
 puts "options: ", JSON.pretty_generate(opts.marshal_dump) if opts.debug
 
 if opts.lists
 
   opts.lists.uniq.sort.each { |list|
-    dirlist = ->(x) {
-      Pathname.new(x).entries.find_all {|f| f.to_s =~ /\.json$/i}
-    }
     does = {
-      collectors: ->() { dirlist.call(opts.collectors_dir) },
-      plugins:    ->() { dirlist.call(opts.plugins_dir) },
+      collectors: ->() { monitor.find_collectors },
+      plugins:    ->() { monitor.find_plugins },
       roles:      ->() { raise "roles list not implemented" },
     }
     puts does[list].call.unshift("#{list}:").join("\n  ");
@@ -45,5 +45,9 @@ if opts.daemonize
 end
 
 # TODO load collectors after daemonize - skip + complain
+
+EM.run {
+  monitor.run
+}
 
 # vim:ts=2:sw=2:et:sta
