@@ -15,7 +15,9 @@ class Monitor
   end
 
   def _dirjson (x)
-    Pathname.new(x).entries.find_all {|f| f.to_s =~ /\.json$/i}
+    x = Pathname.new(x)
+    x.entries.find_all {|f| f.to_s =~ /\.json$/i}.
+      map {|f| x + f}
   end
 
   def find_collectors
