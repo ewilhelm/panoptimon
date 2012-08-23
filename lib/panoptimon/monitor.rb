@@ -38,6 +38,7 @@ class Monitor
     }
     EM.next_tick(&runall)
     minterval = collectors.map{|c| c.interval}.min
+    minterval = 60 if minterval.nil?
     logger.debug "minimum: #{minterval}"
     EM.add_periodic_timer(minterval, &runall);
   end
