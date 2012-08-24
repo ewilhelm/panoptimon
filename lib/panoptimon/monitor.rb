@@ -10,9 +10,7 @@ class Monitor
     args.each { |k,v| instance_variable_set("@#{k}", v) }
 
     me = self
-    @bus = EM.spawn { |metric|
-      me.logger.debug "metric: #{metric.inspect}"
-    }
+    @bus = EM.spawn { |metric| me.bus_driver(metric) }
   end
 
   def _dirjson (x)
@@ -68,6 +66,10 @@ class Monitor
     minterval = 60 if minterval.nil?
     logger.debug "minimum: #{minterval}"
     EM.add_periodic_timer(minterval, &runall);
+  end
+
+  def bus_driver(metric)
+    logger.debug "metric: #{metric.inspect}"
   end
 
 end
