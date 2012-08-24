@@ -36,7 +36,8 @@ if opts.lists
   exit
 end
 
-# TODO load plugins before daemonize - fatal on errors
+# load plugins before daemonize - fatal on errors
+monitor.load_plugins
 
 if opts.daemonize
   # TODO must remember cwd and/or make config values into absolute paths?

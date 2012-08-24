@@ -7,6 +7,7 @@ class Monitor
 
   def initialize (args)
     @collectors = []
+    @plugins    = []
     args.each { |k,v| instance_variable_set("@#{k}", v) }
 
     me = self
@@ -42,6 +43,12 @@ class Monitor
         logger.error "collector #{f} failed to load: \n" +
           "  #{ex.message} \n  #{ex.backtrace[0]}"
       end
+    }
+  end
+
+  def load_plugins
+    find_plugins.each {|p|
+      logger.warn "TODO something with plugin #{p}"
     }
   end
 
