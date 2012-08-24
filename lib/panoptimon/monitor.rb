@@ -5,7 +5,7 @@ class Monitor
 
   attr_reader :config, :collectors, :plugins
 
-  def initialize (args)
+  def initialize (args={})
     @collectors = []
     @plugins    = []
     args.each { |k,v| instance_variable_set("@#{k}", v) }
