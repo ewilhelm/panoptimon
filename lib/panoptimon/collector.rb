@@ -6,13 +6,14 @@ class Collector
 
   include Panoptimon::Logger
 
-  attr_reader :cmd, :config, :bus, :last_run_time, :interval
+  attr_reader :name, :cmd, :config, :bus, :last_run_time, :interval
   def initialize (args)
     cmd = args.delete(:command) or raise "must have 'command' argument"
     @cmd = cmd.class == Array ? cmd : Shellwords.shellsplit(cmd)
     @bus = args.delete(:bus) or raise "must have 'bus' argument"
     args.each { |k,v| instance_variable_set("@#{k}", v) }
 
+    @name ||= 'unnamed'
     @config ||= {}
 
     @interval = config[:interval] || 60

@@ -9,8 +9,9 @@ class Monitor
     @collectors = []
     args.each { |k,v| instance_variable_set("@#{k}", v) }
 
+    me = self
     @bus = EM.spawn { |metric|
-      logger.debug "metric: #{metric.inspect}"
+      me.logger.debug "metric: #{metric.inspect}"
     }
   end
 
@@ -29,6 +30,26 @@ class Monitor
   end
 
   def load_collectors
+    find_collectors.each {|f|
+      begin
+        conf = JSON.parse(f.open.read, {:symbolize_names => true})
+        base = f.basename.sub(/\.json$/, '').to_s
+        command = conf[:exec] || base
+        command = f.dirname + base + command unless command =~ /^\//
+        name = conf[:name] || base
+        logger.debug "command: #{command}"
+        collector = Collector.new(
+          name: name,
+          bus: @bus,
+          command: [command.to_s] + conf[:args].to_a,
+          config: conf,
+        )
+        collectors << collector
+      rescue => ex
+        logger.warn "collector #{f} failed to load: \n" +
+          "  #{ex.message} \n  #{ex.backtrace[0]}"
+      end
+    }
   end
 
   def run

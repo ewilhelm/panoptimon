@@ -48,7 +48,8 @@ if opts.daemonize
     log_output: true)
 end
 
-# TODO load collectors after daemonize - skip + complain
+# load collectors after daemonize - skip + complain
+monitor.load_collectors
 
 EM.run {
   monitor.run
