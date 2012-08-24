@@ -46,7 +46,7 @@ class Monitor
         )
         collectors << collector
       rescue => ex
-        logger.warn "collector #{f} failed to load: \n" +
+        logger.error "collector #{f} failed to load: \n" +
           "  #{ex.message} \n  #{ex.backtrace[0]}"
       end
     }
