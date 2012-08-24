@@ -19,13 +19,8 @@ class Monitor
       map {|f| x + f}
   end
 
-  def find_collectors
-    _dirjson(config.collectors_dir)
-  end
-
-  def find_plugins
-    _dirjson(config.plugins_dir)
-  end
+  def find_collectors; _dirjson(config.collectors_dir); end
+  def find_plugins;    _dirjson(config.plugins_dir);    end
 
   def load_collectors
     find_collectors.each {|f|
