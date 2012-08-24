@@ -16,7 +16,7 @@ class Collector
     @config ||= {}
 
     @interval = config[:interval] || 60
-    @last_run_time = Time.at(-config[:interval])
+    @last_run_time = Time.at(-@interval)
   end
 
   def run
