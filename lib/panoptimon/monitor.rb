@@ -7,7 +7,7 @@ class Monitor
 
   def initialize (args={})
     @collectors = []
-    @plugins    = []
+    @plugins    = {}
     args.each { |k,v| instance_variable_set("@#{k}", v) }
 
     me = self
@@ -49,6 +49,9 @@ class Monitor
   def load_plugins
     find_plugins.each {|p|
       logger.warn "TODO something with plugin #{p}"
+      # TODO just a bunch of blocks?
+      # vs your-own-object vs my-own-object tracking name+config attr?
+      # plugins[name] = eval(File(name), empty_binding, name).call(config)
     }
   end
 
@@ -72,6 +75,8 @@ class Monitor
 
   def bus_driver(metric)
     logger.debug "metric: #{metric.inspect}"
+    info = metric # TODO unpack / flatten...
+    plugins.each {|n,p| p.call(info)}
   end
 
 end
