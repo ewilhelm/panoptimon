@@ -46,12 +46,22 @@ class Monitor
     }
   end
 
+  def empty_binding; binding; end
   def load_plugins
-    find_plugins.each {|p|
-      logger.warn "TODO something with plugin #{p}"
-      # TODO just a bunch of blocks?
-      # vs your-own-object vs my-own-object tracking name+config attr?
-      # plugins[name] = eval(File(name), empty_binding, name).call(config)
+    find_plugins.each {|f|
+      conf = JSON.parse(f.open.read, {:symbolize_names => true})
+      base = f.basename.sub(/\.json$/, '').to_s
+      name = conf[:name] || base
+
+      # TODO support conf[:require] -> class.setup(conf) scheme?
+      rb = conf[:require] || "#{base}.rb"
+      rb = f.dirname + base + rb
+
+      setup = eval("->(name, config) {#{rb.open.read}\n}",
+        empty_binding, rb.to_s, 1)
+      callback = setup.call(name, conf)
+      logger.debug "plugin #{callback} - #{plugins[name]}"
+      plugins[name] = callback unless callback.nil?
     }
   end
 
