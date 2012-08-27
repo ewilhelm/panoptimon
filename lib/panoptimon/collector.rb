@@ -45,6 +45,18 @@ module CollectorSink
     @handler = handler
   end
 
+  def _flatten_hash (i,p,h)
+    h.each {|k,v|
+      k = "#{p}|#{k}"
+      if v.is_a?(Hash)
+        _flatten_hash(i, k, v)
+      else
+        i[k] = v
+      end
+    }
+    return i
+  end
+
   def receive_data (data)
     @handler.logger.debug "incoming"
     @buf ||= BufferedTokenizer.new("\n")
@@ -56,7 +68,7 @@ module CollectorSink
         $stderr.puts "error parsing #{line.dump} - #{$!}"
       end
       @handler.logger.debug "line: #{line}"
-      @handler.bus.notify(data)
+      @handler.bus.notify(_flatten_hash({}, @handler.name, data))
     end
   end
 
