@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+require 'json'
+cmd_args = ARGV[0]
+c = JSON.parse(ARGV[1])
+
+$stdout.sync = true
+$stderr.puts "df interval: #{c['interval']}"
+
+cmd_output = %x{ df #{cmd_args} }
+
+lines = cmd_output.split(/\n/)
+
+headers = lines.shift()
+output  = {}
+output2 = []
+
+lines.each do |line|
+  (fs, size, used, avail, use, mounted_on) = line.split 
+  h = { :fs => fs, :size => size, :used => used, :avail => avail, :percentage => use, :mounted_on => mounted_on } 
+  output2.push(h)
+  output[fs] = { :size => size, :used => used, :free => avail }
+end
+
+puts JSON.generate(:output => output)
+puts JSON.generate(:output2=> output2)

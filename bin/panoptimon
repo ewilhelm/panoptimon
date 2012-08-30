@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 # Panoptimon - The All-Seeing System Monitor Daemon
 
