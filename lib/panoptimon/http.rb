@@ -35,6 +35,7 @@ class HTTP
 
   def favicon(env)
     # TODO bundle / configure favicon?
+    # NOTE why doesn't rack/thin support .to_path per spec?
     return [200, {'Content-Type' => 'image/x-icon'},
       Pathname.new('/tmp/favicon.ico').open]
   end
