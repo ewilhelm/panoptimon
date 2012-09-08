@@ -89,14 +89,16 @@ class Monitor
     logger.debug "minimum: #{minterval}"
     EM.add_periodic_timer(minterval, &runall);
 
+    @http.start if @http
+
   end
 
   def enable_cache(arg=true);
-    if arg; @cached ||= []; else; @cached = nil; end
+    if arg; @cached ||= {}; else; @cached = nil; end
   end
 
   def bus_driver(metric)
-    logger.debug "metric: #{metric.inspect}"
+    logger.debug {"metric: #{metric.inspect}"}
     metric.each {|k,v| @cached[k] = v} if @cached
     plugins.each {|n,p| p.call(metric)}
   end
