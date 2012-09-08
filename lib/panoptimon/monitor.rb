@@ -3,7 +3,7 @@ class Monitor
 
   include Panoptimon::Logger
 
-  attr_reader :config, :collectors, :plugins
+  attr_reader :config, :collectors, :plugins, :cached
 
   def initialize (args={})
     @collectors = []
@@ -46,6 +46,13 @@ class Monitor
     }
   end
 
+  def http
+    return @http unless @http.nil?
+    # TODO rescue LoadError => nicer error message
+    require 'panoptimon/http'
+    @http = HTTP.new
+  end
+
   def empty_binding; binding; end
   def load_plugins
     find_plugins.each {|f|
@@ -57,9 +64,9 @@ class Monitor
       rb = conf[:require] || "#{base}.rb"
       rb = f.dirname + base + rb
 
-      setup = eval("->(name, config) {#{rb.open.read}\n}",
+      setup = eval("->(name, config, monitor) {#{rb.open.read}\n}",
         empty_binding, rb.to_s, 1)
-      callback = setup.call(name, conf)
+      callback = setup.call(name, conf, self)
       logger.debug "plugin #{callback} - #{plugins[name]}"
       plugins[name] = callback unless callback.nil?
     }
@@ -81,12 +88,17 @@ class Monitor
     minterval = 60 if minterval.nil?
     logger.debug "minimum: #{minterval}"
     EM.add_periodic_timer(minterval, &runall);
+
+  end
+
+  def enable_cache(arg=true);
+    if arg; @cached ||= []; else; @cached = nil; end
   end
 
   def bus_driver(metric)
     logger.debug "metric: #{metric.inspect}"
-    info = metric # TODO unpack / flatten...
-    plugins.each {|n,p| p.call(info)}
+    metric.each {|k,v| @cached[k] = v} if @cached
+    plugins.each {|n,p| p.call(metric)}
   end
 
 end

@@ -15,3 +15,8 @@ spec/reports
 test/tmp
 test/version_tmp
 tmp
+/notes.txt
+/metrics.log
+/panoptimon.output
+/sample_configs/1/plugins/status_http
+/sample_configs/1/plugins/status_http.json
