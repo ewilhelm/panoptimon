@@ -30,7 +30,12 @@ class HTTP
         '<body><p>nope</p></body></html>']
     end
     env['rack.logger'] = logger
-    return go[1].call(env)
+    begin
+      return go[1].call(env)
+    rescue => ex
+      logger.error { "error: #{ex.message} #{ex.backtrace.join("\n  ")}" }
+      return [500, {'Content-Type' => 'text/html'}, ['bah']]
+    end
   end
 
   def favicon(env)
