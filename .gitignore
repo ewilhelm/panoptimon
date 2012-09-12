@@ -20,3 +20,5 @@ tmp
 /panoptimon.output
 /sample_configs/1/plugins/status_http
 /sample_configs/1/plugins/status_http.json
+/sample_configs/1/plugins/riemann_stream
+/sample_configs/1/plugins/riemann_stream.json
