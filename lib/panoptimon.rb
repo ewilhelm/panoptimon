@@ -18,7 +18,7 @@ def self.load_options (args)
   defaults = {
     :daemonize      => true,
     :config_dir     => '/etc/panoptimon/',
-    :config_file    => '/etc/panoptimon/panoptimon.json',
+    :config_file    => '%/panoptimon.json',
     :collectors_dir => '%/collectors',
     :plugins_dir    => '%/plugins',
     :collector_timeout  => 120,
@@ -91,19 +91,26 @@ def self.load_options (args)
 
   return false if options[:quit]
 
+  render = ->(d, x) { # x with '%/' can be relative to dir d
+    f = "#{x}"; f.sub!(/^%\//, '').nil? ? f : File.join(d, f)
+  }
+
+  # default config file is relative to config dir
+  cfile = render.call(
+    options[:config_dir]  || defaults[:config_dir],
+    options[:config_file] || defaults[:config_file])
+
   config = defaults.merge(
-    options[:config_file] == '' ? {} : JSON.parse(
-      File.read(options[:config_file] || defaults[:config_file]),
-      {:symbolize_names => true}
-    )
+    options[:config_file] == '' ? {} :
+      JSON.parse(File.read(cfile), {:symbolize_names => true})
   ).merge(options);
+
+  config[:config_file] = cfile # for diagnostics
 
   (config.delete(:configure) || {}).each { | k,v| config[k] = v }
 
-  # these can be relative to config_dir
   [:collectors_dir, :plugins_dir].each { |d|
-    config[d] = File.join(config[:config_dir], config[d]) \
-      if config[d].sub!(/^%\//, '')
+    config[d] = render.call(config[:config_dir], config[d])
   }
 
   return OpenStruct.new(config).freeze
