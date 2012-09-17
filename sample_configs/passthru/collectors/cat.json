@@ -1,0 +1,5 @@
+{
+  "description" : "static pass-thru collection for testing",
+  "exec" : "/usr/bin/perl",
+  "args" : ["-e", "print q{}.<>", "sample_configs/passthru/collectors/cat/collect_this.json"]
+}

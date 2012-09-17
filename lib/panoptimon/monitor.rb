@@ -93,6 +93,10 @@ class Monitor
 
   end
 
+  def stop
+    EM.stop
+  end
+
   def enable_cache(arg=true);
     if arg; @cached ||= {}; else; @cached = nil; end
   end
