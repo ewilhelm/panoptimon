@@ -29,7 +29,7 @@ def self.load_options (args)
     o = {}
     OptionParser.new do |opts|
 
-      opts.on('-c', '--config-file [FILENAME]',
+      opts.on('-c', '--config-file FILENAME',
         "Alternative configuration file ",
         "(#{defaults[:config_file]})"
       ) { |v| o[:config_file] = v.nil? ? '' : v }
@@ -40,7 +40,7 @@ def self.load_options (args)
 
       ['config', 'collectors', 'plugins'].each { |x|
         k = "#{x}_dir".to_sym
-        opts.on("--#{x}-dir [DIR]",
+        opts.on("--#{x}-dir DIR",
           "#{x.capitalize} directory (#{defaults[k]})"
         ) { |v| o[k] = v }
       }
@@ -50,14 +50,14 @@ def self.load_options (args)
         ) { (o[:lists] ||= []).push(x) }
       }
 
-      opts.on('-o', '--configure [X=Y]',
+      opts.on('-o', '--configure X=Y',
         'Set configuration values'
       ) { |x|
         (k,v) = x.split(/=/, 2)
         (o[:configure] ||= {})[k.to_sym] = v
       }
 
-      opts.on('-l', '--location [LOC]', "Set node location"
+      opts.on('-l', '--location LOC', "Set node location"
         # TODO this feature might be implemented as a plugin
       ) { raise "--location unimplemented" }
 
