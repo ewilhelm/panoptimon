@@ -57,6 +57,12 @@ def self.load_options (args)
         (o[:configure] ||= {})[k.to_sym] = v
       }
 
+      opts.on('--show WHAT',
+        %q{Show/validate settings for:  'config' / collector:foo / plugin:foo}
+      ) { |x| (k,v) = x.split(/:/, 2)
+        o[:show] = {k.to_sym => v||true}
+      }
+
       opts.on('-l', '--location LOC', "Set node location"
         # TODO this feature might be implemented as a plugin
       ) { raise "--location unimplemented" }

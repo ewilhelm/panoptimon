@@ -19,8 +19,27 @@ opts = Panoptimon.load_options(ARGV) or exit
 monitor = Panoptimon::Monitor.new(config: opts)
 monitor.logger.level = ::Logger::DEBUG if opts.debug
 
+if opts.show then opts.show.each {|show, what|
+
+  getconf = ->(type, name) {
+    file = monitor.send("find_#{type}s").find {|f|
+      f.basename.to_s == "#{name}.json"}
+    {file => monitor.send("_load_#{type}_config", file)}
+  }
+
+  puts JSON.pretty_generate(
+    case show 
+      when :config;    {config: opts.marshal_dump}
+      when :collector; getconf.call(show, what)
+      when :plugin;    getconf.call(show,what)
+      else raise "--show '#{show}' argument invalid"
+    end
+  ).sub(/^{\n  /, '').sub(/\n}$/,'').gsub(/\n  /, "\n")
+  exit
+}; end
+
 # XXX needs a real test
-puts "options: ", JSON.pretty_generate(opts.marshal_dump) if opts.debug
+puts "config: ", JSON.pretty_generate(opts.marshal_dump) if opts.debug
 
 if opts.lists
 
