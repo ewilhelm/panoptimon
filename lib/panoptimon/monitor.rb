@@ -26,24 +26,33 @@ class Monitor
   def load_collectors
     find_collectors.each {|f|
       begin
-        conf = JSON.parse(f.open.read, {:symbolize_names => true})
-        base = f.basename.sub(/\.json$/, '').to_s
-        command = conf[:exec] || base
-        command = f.dirname + base + command unless command =~ /^\//
-        name = conf[:name] || base
-        logger.debug "command: #{command}"
-        collector = Collector.new(
-          name: name,
-          bus: @bus,
-          command: [command.to_s] + conf[:args].to_a,
-          config: conf,
-        )
-        collectors << collector
+        _init_collector(_load_collector_config(f))
       rescue => ex
         logger.error "collector #{f} failed to load: \n" +
           "  #{ex.message} \n  #{ex.backtrace[0]}"
       end
     }
+  end
+
+  def _load_collector_config (file)
+    conf = JSON.parse(file.open.read, {:symbolize_names => true})
+    base = file.basename.sub(/\.json$/, '').to_s
+    command = conf[:exec] ||= base
+    command = file.dirname + base + command unless command =~ /^\//
+    conf[:name] ||= base
+    return conf.merge({command: command})
+  end
+
+  def _init_collector (conf)
+    name    = conf.delete(:name)
+    command = conf.delete(:command)
+    collector = Collector.new(
+      name: name,
+      bus: @bus,
+      command: [command.to_s] + conf[:args].to_a,
+      config: conf,
+    )
+    collectors << collector
   end
 
   def http
