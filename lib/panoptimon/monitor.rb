@@ -55,21 +55,28 @@ class Monitor
 
   def empty_binding; binding; end
   def load_plugins
-    find_plugins.each {|f|
-      conf = JSON.parse(f.open.read, {:symbolize_names => true})
-      base = f.basename.sub(/\.json$/, '').to_s
-      name = conf[:name] || base
+    find_plugins.each {|f| _init_plugin(_load_plugin_config(f)) }
+  end
 
-      # TODO support conf[:require] -> class.setup(conf) scheme?
-      rb = conf[:require] || "#{base}.rb"
-      rb = f.dirname + base + rb
+  def _load_plugin_config (file)
+    conf = JSON.parse(file.open.read, {:symbolize_names => true})
+    base = file.basename.sub(/\.json$/, '').to_s
+    name = conf[:name] || base
 
-      setup = eval("->(name, config, monitor) {#{rb.open.read}\n}",
-        empty_binding, rb.to_s, 1)
-      callback = setup.call(name, conf, self)
-      logger.debug "plugin #{callback} - #{plugins[name]}"
-      plugins[name] = callback unless callback.nil?
-    }
+    # TODO support conf[:require] -> class.setup(conf) scheme?
+    rb = conf[:require] || "#{base}.rb"
+    rb = file.dirname + base + rb
+    return conf.merge({base: base, rb: rb})
+  end
+
+  def _init_plugin (conf)
+    name = conf.delete(:name)
+    rb   = conf.delete(:rb)
+    setup = eval("->(name, config, monitor) {#{rb.open.read}\n}",
+      empty_binding, rb.to_s, 1)
+    callback = setup.call(name, conf, self)
+    logger.debug "plugin #{callback} - #{plugins[name]}"
+    plugins[name] = callback unless callback.nil?
   end
 
   def run
