@@ -4,6 +4,7 @@ require 'panoptimon/monitor'
 require 'panoptimon/collector'
 
 require 'optparse'
+require 'ostruct'
 
 require 'rubygems'
 require 'eventmachine'
