@@ -32,6 +32,11 @@ if opts.show then opts.show.each {|show, what|
       when :config;    {config: opts.marshal_dump}
       when :collector; getconf.call(show, what)
       when :plugin;    getconf.call(show,what)
+      when %r{/}
+        p = Pathname.new(show.to_s)
+        raise "no such file '#{p}'" unless p.exist?
+        {p => monitor.send(
+          "_load_#{p.dirname.basename.to_s.sub(/s$/,'')}_config", p)}
       else raise "--show '#{show}' argument invalid"
     end
   ).sub(/^{\n  /, '').sub(/\n}$/,'').gsub(/\n  /, "\n")
