@@ -35,12 +35,17 @@ class Monitor
   end
 
   def _load_collector_config (file)
-    conf = JSON.parse(file.open.read, {:symbolize_names => true})
+    conf = JSON.parse(file.read, {:symbolize_names => true})
     base = file.basename.sub(/\.json$/, '').to_s
     command = conf[:exec] ||= base
     command = file.dirname + base + command unless command =~ /^\//
-    conf[:name] ||= base
-    return conf.merge({command: command})
+    return conf.
+      merge({
+        name: base,
+        interval: (self.config.collector_interval || 99).to_i,
+        timeout:  (self.config.collector_timeout || 99).to_i
+      }) {|k,a,b| a}.
+      merge({command: command})
   end
 
   def _init_collector (conf)
@@ -68,7 +73,7 @@ class Monitor
   end
 
   def _load_plugin_config (file)
-    conf = JSON.parse(file.open.read, {:symbolize_names => true})
+    conf = JSON.parse(file.read, {:symbolize_names => true})
     base = file.basename.sub(/\.json$/, '').to_s
     name = conf[:name] || base
 
@@ -101,7 +106,7 @@ class Monitor
     }
     EM.next_tick(&runall)
     minterval = collectors.map{|c| c.interval}.min
-    minterval = 60 if minterval.nil?
+    minterval = 60 if minterval.nil? # XXX should never happen
     logger.debug "minimum: #{minterval}"
     EM.add_periodic_timer(minterval, &runall);
 
