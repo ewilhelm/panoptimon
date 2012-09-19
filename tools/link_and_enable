@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+
+require 'pathname'
+
+from, to = ARGV[0], ARGV[1]
+
+raise "must have source and dest dirs" unless(from and to)
+
+from = Pathname.new(from)
+to = Pathname.new(to)
+
+raise "'#{from}' does not exist" unless from.exist?
+raise "'#{to}' does not exist"   unless to.directory?
+
+valid = ['collectors', 'plugins']
+
+raise "destination must be in collectors|plugins" unless
+  valid.include?(to.basename.to_s)
+
+name = from.basename.to_s
+conf = name + '.json'
+
+check_conf = from + conf
+raise "config '#{check_conf}' does not exist" unless check_conf.file?
+
+dest = to.join(name)
+dest.make_symlink(from.relative_path_from(to))
+puts "link: '#{dest}'"
+
+conf_dest = to.join(conf)
+puts "link: '#{conf_dest}'"
+conf_dest.make_symlink(dest.basename.join(conf))
