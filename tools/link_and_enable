@@ -1,5 +1,10 @@
 #!/usr/bin/env ruby
 
+# Symlinks your directory and .json file into config dirs.
+# (expects foo.json inside directory foo/)
+# ./tools/link_and_enable collectors/foo /etc/panoptimon/collectors
+# ./tools/link_and_enable plugins/awesome /etc/panoptimon/plugins
+
 require 'pathname'
 
 from, to = ARGV[0], ARGV[1]
