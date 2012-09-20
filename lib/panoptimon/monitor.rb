@@ -75,12 +75,18 @@ class Monitor
   def _load_plugin_config (file)
     conf = JSON.parse(file.read, {:symbolize_names => true})
     base = file.basename.sub(/\.json$/, '').to_s
-    name = conf[:name] || base
 
     # TODO support conf[:require] -> class.setup(conf) scheme?
     rb = conf[:require] || "#{base}.rb"
     rb = file.dirname + base + rb
-    return conf.merge({base: base, rb: rb})
+    return conf.
+      merge({
+        name: base,
+      }) {|k,a,b| a}.
+      merge({
+        base: base,
+        rb: rb
+      })
   end
 
   def _init_plugin (conf)
