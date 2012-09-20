@@ -12,7 +12,7 @@ hostname = config[:hostname] || Socket.gethostname
   c.send_maybe_recv(Riemann::Message.new(:events =>
     metrics.keys.map {|k|
       v = metrics[k]
-      v = v.respond_to?(:to_f) ? v : v ? 1 : 0
+      v = v.respond_to?(:to_f) ? v.to_f : v ? 1 : 0
       Riemann::Event.new(
         host:    hostname,
         service: k, metric:  v,
