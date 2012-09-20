@@ -1,1 +1,3 @@
-{"level" : "debug"}
+{"level" : "debug",
+"prefix" : "log_to_logger: ",
+"json"   : false}
