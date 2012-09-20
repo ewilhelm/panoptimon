@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+$stdout.sync = true # persistent process
+
+require 'json'
+opt = JSON::parse(ARGV[0])
+
+p = IO.popen([*%w{vmstat -n }, opt['interval'].to_s], 'r')
+p.readline # scrap
+want = {user: 'us', system: 'sy', idle: 'id'}
+
+# index the header
+head = p.readline.chomp.sub(/^\s+/, '').split(/\s+/)
+head = Hash[*head.zip(0..(head.length-1)).flatten]
+raise "oops" unless head.values_at(*want.values).length == want.values.length
+
+outs = {}; want.each {|k,v| outs[k] = head[v]}
+
+# discard first (unprimed) output
+p.readline; puts '{}'
+
+while l = p.readline.sub(/^\s+/, '')
+  if l =~ /\d+\s+\d/
+    l = l.split(/\s+/)
+    puts JSON::generate(
+      Hash[*outs.keys.map {|k| [k, l[outs[k]]]}.flatten]
+    )
+  else
+    puts '{}'
+  end
+end
