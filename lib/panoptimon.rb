@@ -39,7 +39,11 @@ def self.load_options (args)
         "Don't daemonize (#{not defaults[:daemonize]})"
       ) { |v| o[:daemonize] = ! v }
 
-      ['config', 'collectors', 'plugins'].each { |x|
+      opts.on('-C', '--config-dir DIR',
+        "Config directory (#{defaults[:config_dir]})"
+      ) { |v| o[:config_dir] = v }
+
+      ['collectors', 'plugins'].each { |x|
         k = "#{x}_dir".to_sym
         opts.on("--#{x}-dir DIR",
           "#{x.capitalize} directory (#{defaults[k]})"
