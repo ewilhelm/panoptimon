@@ -134,7 +134,14 @@ class Monitor
   def bus_driver(metric)
     logger.debug {"metric: #{metric.inspect}"}
     metric.each {|k,v| @cached[k] = v} if @cached
-    plugins.each {|n,p| p.call(metric)}
+    plugins.each {|n,p|
+      begin p.call(metric)
+      rescue => e
+        logger.warn "plugin '#{n}' error: " +
+          "#{e}\n  #{e.backtrace[0].sub(%r{^.*/?(plugins/)}, '\1')}"
+        plugins.delete(n)
+      end
+    }
   end
 
 end
