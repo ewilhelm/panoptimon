@@ -35,7 +35,7 @@ class Collector
       logger.error {"collector #{name} failed: #{status}" +
         (errmess.nil? ? '' :
           "\n  #{errmess.chomp.split(/\n/).join("\n  ")}")
-      } if(status != 0)
+      } if(not(status.nil?) and status != 0)
       @child = nil
     }
   end
