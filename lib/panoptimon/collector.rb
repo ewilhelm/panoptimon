@@ -31,10 +31,17 @@ class Collector
 
     logger.info {"run command: #{cmdc}"}
     (@child = EM.popen3b(cmdc, CollectorSink, self)
-    ).on_unbind { |status|
-      logger.debug "unbind #{status}"
+    ).on_unbind { |status, errmess|
+      logger.error {"collector #{name} failed: #{status}" +
+        (errmess.nil? ? '' :
+          "\n  #{errmess.chomp.split(/\n/).join("\n  ")}")
+      } if(status != 0)
       @child = nil
     }
+  end
+
+  def noise(mess)
+    logger.warn "collector/#{name} noise: #{mess.chomp}"
   end
 
   def running?
@@ -77,13 +84,12 @@ module CollectorSink
   end
 
   def receive_stderr (mess)
-    # TODO handler.noise ... ?
-    @handler.logger.warn "stderr noise #{mess}"
+    @handler.noise(mess)
     (@err_mess ||= '') << mess
   end
 
   def on_unbind (&block); @on_unbind = block; end
-  def unbind; @on_unbind.call(get_status.exitstatus); end
+  def unbind; @on_unbind.call(get_status.exitstatus, @err_mess); end
 
 end
 
