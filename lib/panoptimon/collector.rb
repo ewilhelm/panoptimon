@@ -10,6 +10,10 @@ class Collector
   def initialize (args)
     cmd = args.delete(:command) or raise "must have 'command' argument"
     @cmd = cmd.class == Array ? cmd : Shellwords.shellsplit(cmd)
+    ->(exe) {
+      raise "no such file '#{exe}'" unless File.exist?(exe)
+      raise "command '#{exe}' is not executable" unless File.executable?(exe)
+    }.call(@cmd[0]) # TODO or maybe args[:interpreter]
     @bus = args.delete(:bus) or raise "must have 'bus' argument"
     args.each { |k,v| instance_variable_set("@#{k}", v) }
 
