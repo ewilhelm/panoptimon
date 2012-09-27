@@ -60,12 +60,7 @@ if opts.lists
   exit
 end
 
-# load plugins before daemonize - fatal on errors
-monitor.load_plugins
-
 if opts.daemonize
-  # TODO must remember cwd and/or make config values into absolute paths?
-  #      (Pathname...realpath?)
   # TODO could possibly use webrick::daemon.start or process.daemon,
   # but this has support for redirecting io to logfiles... worth it?
   Daemons.daemonize(
@@ -73,7 +68,9 @@ if opts.daemonize
     log_output: true)
 end
 
-# load collectors after daemonize - skip + complain
+# TODO maybe split config loading / init across daemonize for better
+# startup diagnostics about config errors
+monitor.load_plugins
 monitor.load_collectors
 
 EM.run {

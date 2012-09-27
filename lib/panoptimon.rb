@@ -120,6 +120,11 @@ def self.load_options (args)
     config[d] = render.call(config[:config_dir], config[d])
   }
 
+  # make all paths absolute
+  [:config_file, :config_dir, :collectors_dir, :plugins_dir].each { |d|
+    config[d] = File.expand_path(config[d])
+  }
+
   return OpenStruct.new(config).freeze
 
 end

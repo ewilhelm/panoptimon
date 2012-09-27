@@ -3,12 +3,14 @@ class Monitor
 
   include Panoptimon::Logger
 
-  attr_reader :config, :collectors, :plugins, :cached
+  attr_reader :config, :collectors, :plugins, :cached, :owd
 
   def initialize (args={})
     @collectors = []
     @plugins    = {}
     args.each { |k,v| instance_variable_set("@#{k}", v) }
+
+    @owd = Dir.pwd
 
     me = self
     @bus = EM.spawn { |metric| me.bus_driver(metric) }
