@@ -113,8 +113,9 @@ class Monitor
       }
     }
     EM.next_tick(&runall)
+    logger.warn 'no collectors' if collectors.length == 0
     minterval = collectors.map{|c| c.interval}.min
-    minterval = 60 if minterval.nil? # XXX should never happen
+    minterval = 67 if minterval.nil? # XXX should never happen
     logger.debug "minimum: #{minterval}"
     EM.add_periodic_timer(minterval, &runall);
 
