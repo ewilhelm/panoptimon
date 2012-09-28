@@ -8,6 +8,7 @@ template = ERB.new <<EOT
   <body>
     <p>
     <%= Time.now %> - running: <%= ((Time.now - start) / 60**2).round(2) %> hours
+    (<%= (%x{ps -o rss= -p #{Process.pid}}.to_f/1024).round(2) %> MB)
     </p>
 
     <h1>Config</h1>
