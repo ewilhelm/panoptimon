@@ -30,14 +30,17 @@ class Collector
     @last_run_time = Time.now # TODO .to_i ?
 
     logger.info {"run command: #{cmdc}"}
-    (@child = EM.popen3b(cmdc, CollectorSink, self)
-    ).on_unbind { |status, errmess|
+    @child = EM.popen3b(cmdc, CollectorSink, self)
+    @child.on_unbind { |status, errmess|
       logger.error {"collector #{name} failed: #{status}" +
         (errmess.nil? ? '' :
           "\n  #{errmess.chomp.split(/\n/).join("\n  ")}")
       } if(not(status.nil?) and status != 0)
       @child = nil
     }
+    logger.debug "timeout: #{config[:timeout]}"
+    # XXX afaict, eventmachine just did not implement this:
+    # @child.set_comm_inactivity_timeout(config[:timeout])
   end
 
   def noise(mess)
@@ -54,6 +57,8 @@ module CollectorSink
 
   def initialize (handler)
     @handler = handler
+    @timeout = @handler.config[:timeout]
+    timer_on
   end
 
   def _flatten_hash (i,p,h)
@@ -68,7 +73,22 @@ module CollectorSink
     return i
   end
 
+  # reset / start timeout timer
+  def timer_on
+    @timer.cancel unless @timer.nil?
+    @timer = EventMachine::Timer.new(@timeout) {
+      @handler.logger.error "timeout on #{@handler.name}"
+      @handler.logger.debug {"pid #{get_pid}"}
+      close_connection()
+    }
+  end
+
+  def timer_off
+    @timer.cancel
+  end
+
   def receive_data (data)
+    timer_on
     @handler.logger.debug "incoming"
     @buf ||= BufferedTokenizer.new("\n")
     @buf.extract(data).each do |line|
@@ -89,7 +109,10 @@ module CollectorSink
   end
 
   def on_unbind (&block); @on_unbind = block; end
-  def unbind; @on_unbind.call(get_status.exitstatus, @err_mess); end
+  def unbind
+    timer_off
+    @on_unbind.call(get_status.exitstatus, @err_mess)
+  end
 
 end
 
