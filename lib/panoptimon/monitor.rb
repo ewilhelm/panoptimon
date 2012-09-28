@@ -3,11 +3,13 @@ class Monitor
 
   include Panoptimon::Logger
 
-  attr_reader :config, :collectors, :plugins, :cached, :owd
+  attr_reader :config, :collectors, :plugins, :cached, :owd,
+    :loaded_plugins
 
   def initialize (args={})
     @collectors = []
     @plugins    = {}
+    @loaded_plugins = {}
     args.each { |k,v| instance_variable_set("@#{k}", v) }
 
     @owd = Dir.pwd
@@ -99,6 +101,7 @@ class Monitor
     callback = setup.call(name, conf, self)
     logger.debug "plugin #{callback} - #{plugins[name]}"
     plugins[name] = callback unless callback.nil?
+    loaded_plugins[name] = conf.clone # XXX need a plugin object?
   end
 
   def run
