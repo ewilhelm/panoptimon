@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require 'json'
+
+df_cmd = 'df -kP' # or without -P on non-gnu...
+info = %x{#{df_cmd}}.split(/\n/).drop(1).
+  map{|l| l.split(/\s+/).values_at(0,2,3,5)} # fs, used, free, mount
+  .find_all{|x| not(x[0] =~ /^(udev|tmpfs|none)$/)}
+
+out = {}
+info.each {|x| out[x[0]] = {
+  used: (x[1].to_f / 1024**2).round(6), # GB significant down to 4kB
+  free: (x[2].to_f / 1024**2).round(6),
+}}
+puts JSON::generate(out)
