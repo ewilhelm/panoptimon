@@ -50,7 +50,7 @@ def self.load_options (args)
         ) { |v| o[k] = v }
       }
 
-      [:collectors, :plugins, :roles].each { |x|
+      [:collectors, :plugins].each { |x|
         opts.on('--list-'+x.to_s, "list all #{x} found"
         ) { (o[:lists] ||= []).push(x) }
       }
@@ -67,10 +67,6 @@ def self.load_options (args)
       ) { |x| (k,v) = x.split(/:/, 2)
         o[:show] = {k.to_sym => v||true}
       }
-
-      opts.on('-l', '--location LOC', "Set node location"
-        # TODO this feature might be implemented as a plugin
-      ) { raise "--location unimplemented" }
 
       opts.on('-d', '--debug', "Enable debugging."
       ) { |v| o[:debug] = v }

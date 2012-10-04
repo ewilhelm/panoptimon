@@ -51,7 +51,6 @@ if opts.lists
     does = {
       collectors: ->() { monitor.find_collectors },
       plugins:    ->() { monitor.find_plugins },
-      roles:      ->() { raise "roles list not implemented" },
     }
     puts does[list].call.tap {|x| x.push('(none)') unless x.length > 0}.
       unshift("#{list}:").join("\n  ");
