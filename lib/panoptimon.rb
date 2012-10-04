@@ -22,8 +22,8 @@ def self.load_options (args)
     :config_file    => '%/panoptimon.json',
     :collectors_dir => '%/collectors',
     :plugins_dir    => '%/plugins',
-    :collector_timeout  => 120,
     :collector_interval => 60,
+    :collector_timeout  => 120,
   }
 
   options = ->() {
@@ -74,17 +74,21 @@ def self.load_options (args)
       opts.on('--verbose', "Enable verbose output"
       ) { |v| o[:verbose] = v }
 
-      opts.separator ""
-      opts.separator "Common options:"
-
-      opts.on_tail('-v', '--version', "Print version"
+      opts.on('-v', '--version', "Print version"
       ) { 
         puts "panoptimon version #{Panoptimon::VERSION}"
         o[:quit] = true
         opts.terminate
       }
 
-      opts.on_tail("-h", "--help", "Show this message"
+      opts.on('--help-defaults', 'Show default config values'
+      ) {
+        puts JSON.pretty_generate(defaults)
+        o[:quit] = true
+        opts.terminate
+      }
+
+      opts.on("-h", "--help", "Show this message"
       ) {
         puts opts
         o[:quit] = true
