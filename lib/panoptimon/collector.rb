@@ -79,7 +79,8 @@ module CollectorSink
     @timer.cancel unless @timer.nil?
     length = @timeout + (opts[:with_interval] ? @interval : 0)
     @timer = EventMachine::Timer.new(length) {
-      @handler.logger.error "timeout on #{@handler.name}"
+      @handler.logger.error "timeout on #{@handler.name}" +
+        (@buf ? " - #{@buf.flush}" : '')
       @handler.logger.debug {"pid #{get_pid}"}
       close_connection()
     }
@@ -90,10 +91,11 @@ module CollectorSink
   end
 
   def receive_data (data)
-    timer_on(with_interval: true)
+    timer_on
     @handler.logger.debug "incoming"
     @buf ||= BufferedTokenizer.new("\n")
     @buf.extract(data).each do |line|
+      timer_on(with_interval: true)
       begin
         data = JSON.parse(line)
       rescue
