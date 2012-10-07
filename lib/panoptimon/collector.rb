@@ -79,8 +79,8 @@ module CollectorSink
     @timer.cancel unless @timer.nil?
     length = @timeout + (opts[:with_interval] ? @interval : 0)
     @timer = EventMachine::Timer.new(length) {
-      @handler.logger.error "timeout on #{@handler.name}" +
-        (@buf ? " - #{@buf.flush}" : '')
+      scrap = @buf ? " - #{@buf.flush}" : ''
+      @handler.logger.error "timeout on #{@handler.name}" + scrap
       @handler.logger.debug {"pid #{get_pid}"}
       close_connection()
     }
