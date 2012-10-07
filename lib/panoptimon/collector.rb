@@ -20,7 +20,7 @@ class Collector
     @name ||= 'unnamed'
     @config ||= {}
 
-    @interval = config[:interval] || 60
+    @interval = config[:interval] ||= 60
     @last_run_time = Time.at(-@interval)
   end
 
@@ -38,7 +38,7 @@ class Collector
       } if(not(status.nil?) and status != 0)
       @child = nil
     }
-    logger.debug "timeout: #{config[:timeout]}"
+    logger.debug "timeout is: #{config[:timeout]}"
     # XXX afaict, eventmachine just did not implement this:
     # @child.set_comm_inactivity_timeout(config[:timeout])
   end
@@ -58,6 +58,7 @@ module CollectorSink
   def initialize (handler)
     @handler = handler
     @timeout = @handler.config[:timeout]
+    @interval = @handler.config[:interval]
     timer_on
   end
 
@@ -74,9 +75,10 @@ module CollectorSink
   end
 
   # reset / start timeout timer
-  def timer_on
+  def timer_on (opts={})
     @timer.cancel unless @timer.nil?
-    @timer = EventMachine::Timer.new(@timeout) {
+    length = @timeout + (opts[:with_interval] ? @interval : 0)
+    @timer = EventMachine::Timer.new(length) {
       @handler.logger.error "timeout on #{@handler.name}"
       @handler.logger.debug {"pid #{get_pid}"}
       close_connection()
@@ -88,7 +90,7 @@ module CollectorSink
   end
 
   def receive_data (data)
-    timer_on
+    timer_on(with_interval: true)
     @handler.logger.debug "incoming"
     @buf ||= BufferedTokenizer.new("\n")
     @buf.extract(data).each do |line|
