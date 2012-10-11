@@ -53,13 +53,10 @@ class Collector
 
 end
 
-module CollectorSink
+class Metric < Hash
 
-  def initialize (handler)
-    @handler = handler
-    @timeout = @handler.config[:timeout]
-    @interval = @handler.config[:interval]
-    timer_on
+  def initialize (name, data)
+    self.merge!(_flatten_hash({}, name, data))
   end
 
   def _flatten_hash (i,p,h)
@@ -72,6 +69,16 @@ module CollectorSink
       end
     }
     return i
+  end
+end
+
+module CollectorSink
+
+  def initialize (handler)
+    @handler = handler
+    @timeout = @handler.config[:timeout]
+    @interval = @handler.config[:interval]
+    timer_on
   end
 
   # reset / start timeout timer
@@ -103,7 +110,7 @@ module CollectorSink
         $stderr.puts "error parsing #{line.dump} - #{$!}"
       end
       @handler.logger.debug "line: #{line}"
-      @handler.bus.notify(_flatten_hash({}, @handler.name, data))
+      @handler.bus.notify(Metric.new(@handler.name, data))
     end
   end
 

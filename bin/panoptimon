@@ -59,6 +59,45 @@ if opts.lists
   exit
 end
 
+if opts.plugin_test
+
+  opts.plugin_test.each do |p|
+    monitor._init_plugin(monitor._load_plugin_config(Pathname.new(p)))
+  end
+
+  module MetricReader
+    def initialize (monitor)
+      @monitor = monitor
+    end
+
+    def notify_readable
+      line = @io.readline
+      begin
+        data = JSON.parse(line)
+      rescue
+        $stderr.puts "error parsing #{line.dump} - #{$!}"
+      end
+      EM.next_tick {
+        @monitor.bus_driver(Panoptimon::Metric.new(:input, data))
+      }
+    rescue EOFError
+      detach
+      EM.stop
+    end
+  end
+
+  $stderr.puts "Enter JSON metrics or type Ctrl-D to exit." if
+    $stdin.tty?
+
+  EM.run {
+    monitor.run
+    EM.watch($stdin, MetricReader, monitor).notify_readable = true
+  }
+
+  exit
+end
+
+########################################################################
 if opts.daemonize
   # TODO could possibly use webrick::daemon.start or process.daemon,
   # but this has support for redirecting io to logfiles... worth it?

@@ -68,6 +68,10 @@ def self.load_options (args)
         o[:show] = {k.to_sym => v||true}
       }
 
+      opts.on('--plugin-test FILE',
+        'Load and test plugin(s).'
+      ) { |x| (o[:plugin_test] ||= []).push(x) }
+
       opts.on('-d', '--debug', "Enable debugging."
       ) { |v| o[:debug] = v }
 
