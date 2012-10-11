@@ -126,7 +126,7 @@ def self.load_options (args)
 
   # make all paths absolute
   [:config_file, :config_dir, :collectors_dir, :plugins_dir].each { |d|
-    config[d] = File.expand_path(config[d])
+    config[d] = File.expand_path(config[d]) unless config[d] == ''
   }
 
   return OpenStruct.new(config).freeze
