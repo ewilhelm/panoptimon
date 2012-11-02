@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+
+require 'json'
+
+config = ARGV[0] ? JSON::parse(ARGV[0]) : {}
+
+$stdout.sync = true
+
+def GB b; (b.to_f / 1024**2).round(6); end # GB significant down to 4kB
+
+while(true) do
+
+  info = File.readlines('/proc/meminfo').map {|l|
+    l = l.chomp.split(/:\s+/, 2)
+    raise "units assumption failed" if
+      l[1].sub!(/\s+(kB)$/, '') and not($+ == 'kB')
+    l
+  }
+  i = Hash[*info.flatten]
+
+  out = {
+    total:     GB(i['MemTotal']),
+    free:      GB(i['MemFree']),
+    buffers:   GB(i['Buffers']),
+    cached:    GB(i['Cached']),
+    swapped:   GB(i['SwapTotal'].to_i - i['SwapFree'].to_i),
+    swap_free: GB(i['SwapFree']),
+  }
+  puts JSON::generate(out)
+
+  break unless config.include?('interval')
+  sleep config['interval']
+end

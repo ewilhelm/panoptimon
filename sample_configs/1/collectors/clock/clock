@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+require 'json'
+c = JSON.parse(ARGV[0])
+
+$stdout.sync = true
+
+$stderr.puts "interval: #{c['interval']}"
+while true
+  puts %Q{{"time" : #{Time.now.to_i}}}
+  sleep c['interval'] || 1
+end

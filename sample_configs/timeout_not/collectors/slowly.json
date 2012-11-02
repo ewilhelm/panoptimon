@@ -1,0 +1,7 @@
+{
+  "description" : "slow, but steady",
+  "interval"    : 10,
+  "timeout"     : 1,
+  "exec" : "/usr/bin/perl",
+  "args" : ["-e", "$|=1; while() {print qq/{\"ok\" : true}\\n/; sleep 10}"]
+}

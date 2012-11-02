@@ -1,0 +1,6 @@
+{
+  "description": "json-only collector example",
+  "interval": 3.0,
+  "exec": "/bin/echo",
+  "args": ["-e", "{\"everything_ok\" : true}\\n\\c"]
+}

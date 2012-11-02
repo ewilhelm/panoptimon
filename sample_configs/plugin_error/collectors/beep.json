@@ -1,0 +1,5 @@
+{
+  "description" : "beeper",
+  "exec" : "/bin/echo",
+  "args" : ["-e", "{\"beep\" : 1}\\n\\c"]
+}

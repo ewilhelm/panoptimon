@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require 'json'
+l = File.new('/proc/loadavg').read.split(/\s+/)
+(j,n) = l[3].split('/')
+
+# TODO support for systems with no /proc
+
+puts JSON::generate({
+  avg_1:  l[0].to_f,
+  avg_5:  l[1].to_f,
+  avg_15: l[2].to_f,
+  jobs:   j.to_i,
+  n:      n.to_i})
+
