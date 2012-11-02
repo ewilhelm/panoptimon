@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'rubygems'
+require 'sys/filesystem'
+
+config = JSON::parse(ARGV[0])
+
+$stdout.sync = true
+
+def GB b; (b.to_f / 1024**3).round(6); end # GB significant down to 4kB
+
+while(true) do
+  info =
+    Sys::Filesystem.mounts.
+    # map {|m| $stderr.puts m.name; m}.
+    find_all{|m| not(m.name =~ /^(devpts|udev|sysfs|tmpfs|none|proc)$/)}.
+    map {|m|
+      s = Sys::Filesystem.stat(m.mount_point)
+      # $stderr.puts "#{m.name} - #{s.inspect}"
+      [m.name, {
+        # block_size: s.block_size,
+        # blocks: s.blocks,
+        # blocks_available: s.blocks_available,
+        space_used: GB((s.blocks - s.blocks_free) * s.block_size),
+        space_free: GB(s.blocks_available         * s.block_size),
+        space_priv: GB((s.blocks_free - s.blocks_available) * s.block_size),
+        files_used: s.files - s.files_available,
+        files_free: s.files_available,
+        # files_priv: s.files_free - s.files_available, # XXX any use?
+      }]
+    }
+  puts JSON::generate(Hash[*info.flatten])
+
+  break unless config.include?('interval')
+  sleep config['interval']
+end

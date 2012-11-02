@@ -1,0 +1,6 @@
+{
+  "description": "df collector example",
+  "interval": 3.0,
+  "exec": "wrap_df",
+  "args": ["-kh"]
+}

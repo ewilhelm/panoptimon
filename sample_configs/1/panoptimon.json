@@ -1,0 +1,4 @@
+{
+  "collector_interval" : 360,
+  "collector_timeout": 10
+}

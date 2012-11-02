@@ -1,0 +1,5 @@
+{
+  "description" : "a noisy collector",
+  "exec" : "/usr/bin/perl",
+  "args" : ["-e", "$|=1; while() {sleep 1; warn qq/noises\\n/; print qq/{\"ok\" : true}\\n/}"]
+}

@@ -15,3 +15,9 @@ spec/reports
 test/tmp
 test/version_tmp
 tmp
+/notes.txt
+/metrics.log
+/panoptimon.output
+
+# for all your experimental needs e.g. symlinks of configs
+/x/

@@ -1,0 +1,5 @@
+{
+  "description" : "noisy failure",
+  "exec" : "/usr/bin/perl",
+  "args" : ["-e", "die q/cannot frobnate/"]
+}

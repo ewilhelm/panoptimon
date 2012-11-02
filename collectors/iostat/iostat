@@ -1,0 +1,53 @@
+#!/usr/bin/env ruby
+
+$stdout.sync = true # persistent process
+
+require 'json'
+opt = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 1, 'count' => 2}
+
+cmd = %w{iostat -xd}
+if opt['interval']
+  cmd.push(opt['interval'].to_s)
+  cmd.push(opt['count'].to_s) if opt['count']
+end
+p = IO.popen(cmd, 'r')
+
+[1,2].each { x = p.readline until x == "\n" } # header + first sample
+
+puts '{}' # beep
+
+def prep l
+  want = {
+    'kb_read/s'  => 'rkB/s',
+    'kb_write/s' => 'wkB/s',
+    'rrqm/s'     => 'rrqm/s',
+    'wrqm/s'     => 'wrqm/s',
+    'reads/s'    => 'r/s',
+    'writes/s'   => 'w/s',
+    'avgrq-sz'   => 'avgrq-sz',
+    'avgqu-sz'   => 'avgqu-sz',
+    'await'      => 'await',
+    'r_await'    => 'r_await',
+    'w_await'    => 'w_await',
+    'util'       => '%util',
+  }
+  head = l.chomp.split(/\s+/)
+  head = Hash[*head.zip(0..(head.length-1)).flatten]
+  raise "oops" unless head.values_at(*want.values).length == want.values.length
+  o = {}; want.each {|k,v| o[k] = head[v]}
+  return o
+end
+
+omap = nil
+group = {}
+
+until p.eof?
+  l = p.readline("\n\n").split(/\n/)
+  omap ||= prep(l[0])
+  puts JSON::generate(Hash[*l.drop(1).map {|x|
+    r = x.split(/\s+/)
+    [r[0], # device name
+      Hash[*omap.keys.map {|k| [k, r[omap[k]].to_f]}.flatten]]
+  }.flatten])
+
+end

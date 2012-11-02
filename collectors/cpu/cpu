@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+
+$stdout.sync = true # persistent process
+
+require 'json'
+opt = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 1}
+
+p = IO.popen([*%w{vmstat -n }, opt['interval'].to_s], 'r')
+p.readline # scrap
+optional = {stolen: 'st'}
+want = {user: 'us', system: 'sy', idle: 'id', wait: 'wa'}.
+  merge(optional)
+
+# index the header
+head = p.readline.chomp.sub(/^\s+/, '').split(/\s+/)
+head = Hash[*head.zip(0..(head.length-1)).flatten]
+
+outs = {}; want.each {|k,v|
+  if head.include?(v)
+    outs[k] = head[v]
+  else
+    raise "missing key '#{v}' (#{k}) - expected in header" \
+      unless optional.include?(k)
+  end
+}
+
+# discard first (unprimed) output
+p.readline; puts '{}'
+
+while l = p.readline.sub(/^\s+/, '')
+  if l =~ /\d+\s+\d/
+    l = l.split(/\s+/)
+    puts JSON::generate(
+      Hash[*outs.keys.map {|k| [k, l[outs[k]]]}.flatten]
+    )
+  else
+    puts '{}'
+  end
+end

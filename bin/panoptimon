@@ -1,0 +1,118 @@
+#!/usr/bin/env ruby
+
+# Panoptimon - The All-Seeing System Monitor Daemon
+
+# copyright 2012 Eric L. Wilhelm
+
+require 'panoptimon'
+
+require 'json'
+require 'pathname'
+
+require 'rubygems'
+require 'daemons'
+require 'eventmachine'
+
+opts = Panoptimon.load_options(ARGV) or exit
+
+monitor = Panoptimon::Monitor.new(config: opts)
+monitor.logger.level = ::Logger::DEBUG if opts.debug
+
+if opts.show then opts.show.each {|show, what|
+
+  getconf = ->(type, name) {
+    file = monitor.send("find_#{type}s").find {|f|
+      f.basename.to_s == "#{name}.json"}
+    {file => monitor.send("_load_#{type}_config", file)}
+  }
+
+  puts JSON.pretty_generate(
+    case show 
+      when :config;    {config: opts.marshal_dump}
+      when :collector; getconf.call(show, what)
+      when :plugin;    getconf.call(show,what)
+      when %r{/}
+        p = Pathname.new(show.to_s)
+        raise "no such file '#{p}'" unless p.exist?
+        {p => monitor.send(
+          "_load_#{p.dirname.basename.to_s.sub(/s$/,'')}_config", p)}
+      else raise "--show '#{show}' argument invalid"
+    end
+  ).sub(/^{\n  /, '').sub(/\n}$/,'').gsub(/\n  /, "\n")
+  exit
+}; end
+
+# XXX needs a real test
+puts "config: ", JSON.pretty_generate(opts.marshal_dump) if opts.debug
+
+if opts.lists
+
+  opts.lists.uniq.sort.each { |list|
+    does = {
+      collectors: ->() { monitor.find_collectors },
+      plugins:    ->() { monitor.find_plugins },
+    }
+    puts does[list].call.tap {|x| x.push('(none)') unless x.length > 0}.
+      unshift("#{list}:").join("\n  ");
+  }
+
+  exit
+end
+
+if opts.plugin_test
+
+  opts.plugin_test.each do |p|
+    monitor._init_plugin(monitor._load_plugin_config(Pathname.new(p)))
+  end
+
+  module MetricReader
+    def initialize (monitor)
+      @monitor = monitor
+    end
+
+    def notify_readable
+      line = @io.readline
+      begin
+        data = JSON.parse(line)
+      rescue
+        $stderr.puts "error parsing #{line.dump} - #{$!}"
+      end
+      EM.next_tick {
+        @monitor.bus_driver(Panoptimon::Metric.new(:input, data))
+      }
+    rescue EOFError
+      detach
+      EM.stop
+    end
+  end
+
+  $stderr.puts "Enter JSON metrics or type Ctrl-D to exit." if
+    $stdin.tty?
+
+  EM.run {
+    monitor.run
+    EM.watch($stdin, MetricReader, monitor).notify_readable = true
+  }
+
+  exit
+end
+
+########################################################################
+if opts.daemonize
+  # TODO could possibly use webrick::daemon.start or process.daemon,
+  # but this has support for redirecting io to logfiles... worth it?
+  Daemons.daemonize(
+    app_name: Pathname.new($0).basename.to_s,
+    log_output: true)
+end
+
+# TODO maybe split config loading / init across daemonize for better
+# startup diagnostics about config errors
+monitor.load_plugins
+monitor.load_collectors
+
+EM.run {
+  monitor.run
+}
+
+# vim:ts=2:sw=2:et:sta

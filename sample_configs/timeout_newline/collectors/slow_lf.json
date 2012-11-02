@@ -1,0 +1,8 @@
+{
+  "description" : "slow / hung mid-line",
+  "interval"    : 10,
+  "timeout"     : 1,
+  "exec" : "/usr/bin/perl",
+  "args" : ["-e", "$|=1; while() {print qq/{\"ok\" : t/; sleep 2; print qq/rue}\\n/; sleep 10}"]
+}
+

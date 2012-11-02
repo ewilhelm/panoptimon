@@ -1,0 +1,6 @@
+{
+  "description" : "too slow",
+  "timeout" : 2,
+  "exec" : "/usr/bin/perl",
+  "args" : ["-e", "$|=1; while() {sleep 3; print qq/{\"ok\" : true}\\n/}"]
+}
