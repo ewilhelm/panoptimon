@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+require 'json'
+
+head = [
+  'rx bytes',
+  'rx packets',
+  'rx errs',
+  'rx drop',
+  'rx fifo',
+  'rx frame',
+  'rx compressed',
+  'rx multicast',
+  'tx bytes',
+  'tx packets',
+  'tx drops',
+  'tx fifo',
+  'tx colls',
+  'tx carrier',
+  'tx compressed'
+]
+
+class Array; def to_h ; Hash[*self.flatten]; end; end
+
+state = File.read('/proc/net/dev').
+  split("\n").drop(2).map {|l|
+    (iface, row) = *l.sub(/^\s+/, '').split(/:\s+/, 2)
+    [iface, head.zip(row.split(/\s+/)).to_h]
+  }.to_h
+
+puts JSON::generate(state)
