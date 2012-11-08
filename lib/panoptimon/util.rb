@@ -2,7 +2,7 @@ module Panoptimon
   module Util
     VERSION = '0.0.1'
 
-    def _os; @os ||= Gem::Platform.local.os.to_sym; end
+    def self._os; @os ||= Gem::Platform.local.os.to_sym; end
 
     # return osname
     # or, given a hash, return the corresponding hash element and raise
