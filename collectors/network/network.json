@@ -1,0 +1,18 @@
+{
+  "report": {
+    "gemserver": {
+      "localaddr": "127.0.0.1",
+      "localport": 8808
+    },
+    "ssh" : {
+      "localport" : 22,
+      "state" : "ESTABLISHED"
+    },
+    "daemons" : { "state" : "LISTEN" },
+    "servers" : { "state" : "LISTEN", "localaddr" : "0.0.0.0" },
+    "self" : {"state" : "ESTABLISHED", "remoteaddr" : "127.0.0.1"},
+    "east" : {"remoteaddr" : "66\\.225\\.\\d+\\.\\d+"},
+    "west" : {"remoteaddr" : "173.194.*.*"}
+  }
+  ,"interval" : 1
+}
