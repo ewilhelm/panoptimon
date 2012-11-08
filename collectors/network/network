@@ -1,0 +1,65 @@
+#!/usr/bin/env ruby
+
+$stdout.sync = true # persistent process
+
+require 'json'
+opt = ARGV[0] ? JSON::parse(ARGV[0], {symbolize_names: true})
+  : {interval: 1, once: 1}
+opt[:interval] ||= 5
+
+cmd = %w{netstat -an --protocol=inet}
+
+opt[:report] or raise "'report' section must be configured"
+
+# TODO read /etc/services and support default numeric port match?
+
+# allow addr to be regexp, glob, or literal
+def _escape (addr)
+  addr =~ /\\./ ? addr
+  : addr =~ /\.\*/ ? addr.gsub(/\*/, '\d+').gsub(/\./, '\.')
+  : Regexp.escape(addr)
+end
+
+# build a report matchlist
+report = opt[:report].keys.map { |k|
+  c = opt[:report][k]
+  {
+    name: k,
+    match: %r{^\w+\s+\d+\s+\d+\s+ # proto,recv,send
+      #{c[:localaddr] ? _escape(c[:localaddr]) : '\d+\.\d+\.\d+.\d+'}
+      :
+      #{c[:localport] ? c[:localport].to_s : '(?:\d+|\*)'}
+      \s+
+      #{c[:remoteaddr] ? _escape(c[:remoteaddr]) : '\d+\.\d+\.\d+.\d+'}
+      :
+      #{c[:remoteport] ? c[:remoteport].to_s : '(?:\d+|\*)'}
+      \s+
+      #{c[:state] ? c[:state].upcase : '\w+'}
+      \s*$
+    }x,
+  }
+}
+
+
+# TODO support netstat --continous if interval < 2 or something?  Would
+# require output to be delayed or something since there is no end marker
+# to the netstat output.
+
+while true
+
+  lines = IO.popen(cmd).readlines.map {|l| l.chomp}
+  lines.shift; lines.shift
+
+  out = {}
+  lines.each { |l|
+    report.find_all {|r| l =~ r[:match]}.each {|match|
+      out[match[:name]] ||= 0
+      out[match[:name]] += 1
+    }
+  }
+
+  puts JSON::generate(out)
+
+  break if opt[:once]
+  sleep opt[:interval]
+end
