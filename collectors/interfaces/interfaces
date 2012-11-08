@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
 require 'json'
+require 'panoptimon/util'
+Panoptimon::Util.os(linux: true)
 
 head = [
   'rx bytes',
