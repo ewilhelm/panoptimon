@@ -1,0 +1,4 @@
+{
+  "description" : "mysql status and slave status collector.  Config must provide some valid combination of hostname,username,password,database,port,socket to connect.",
+  "socket" : "/tmp/mysql.socket"
+}
