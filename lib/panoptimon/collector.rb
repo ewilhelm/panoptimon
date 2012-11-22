@@ -1,3 +1,5 @@
+# Copyright (C) 2012 Sourcefire, Inc.
+
 module Panoptimon
 
 require 'json';

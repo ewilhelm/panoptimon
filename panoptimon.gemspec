@@ -5,7 +5,11 @@ Gem::Specification.new do |gem|
   gem.authors       = ["Eric Wilhelm"]
   gem.description   = %q{The All-Seeing System Monitor Daemon}
   gem.summary       = %q{Panoptimon collects and routes system metrics.}
-  gem.homepage      = ""
+  
+  gem.email         = "sysops@sourcefire.com"
+  gem.homepage      = "https://github.com/synthesist/panoptimon"
+
+  gem.license       = 'bsd' # The (three-clause) BSD License
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }

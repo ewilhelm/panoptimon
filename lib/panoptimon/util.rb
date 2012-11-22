@@ -1,3 +1,5 @@
+# Copyright (C) 2012 Sourcefire, Inc.
+
 module Panoptimon
   module Util
     VERSION = '0.0.1'

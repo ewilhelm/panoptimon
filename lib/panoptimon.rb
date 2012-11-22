@@ -1,3 +1,5 @@
+# Copyright (C) 2012 Sourcefire, Inc.
+
 require 'panoptimon/version'
 require 'panoptimon/logger'
 require 'panoptimon/monitor'

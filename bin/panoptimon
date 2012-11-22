@@ -2,7 +2,7 @@
 
 # Panoptimon - The All-Seeing System Monitor Daemon
 
-# copyright 2012 Eric L. Wilhelm
+# Copyright (C) 2012 Sourcefire, Inc.
 
 require 'panoptimon'
 
