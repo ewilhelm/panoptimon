@@ -17,6 +17,7 @@ Gem::Specification.new do |gem|
   gem.name          = "panoptimon"
   gem.require_paths = ["lib"]
   gem.version       = Panoptimon::VERSION
+  gem.required_ruby_version = '>= 1.9'
   gem.add_dependency 'eventmachine', '~> 1.0.0.beta4'
   gem.add_dependency 'daemons'
 end
