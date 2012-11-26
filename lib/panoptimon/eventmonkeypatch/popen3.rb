@@ -1,3 +1,5 @@
+# Copyright (C) 2012 Sourcefire, Inc.
+
 # adapted from http://pastebin.com/C4hvAyKM
 # and https://gist.github.com/1333428
 
