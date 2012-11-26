@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2012 Sourcefire, Inc.
+
+
+require 'json'
+opt = ARGV[0] ? JSON::parse(ARGV[0], {symbolize_names: true}) : {}
+
+# TODO require 'file/which' ne see stackoverflow 2108727?
+require 'pathname'
+class Pathname; def self.which(cmd)
+  exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
+  ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
+    path = Pathname.new(path)
+    exts.each { |ext|
+      it = path + "#{cmd}#{ext}"
+      return it if it.executable?
+    }
+  end
+  raise "No such command '#{cmd}' in $PATH"
+end; end
+
+class String; def as_number # from perlfaq4
+  self =~ %r{\A[+-]?(?=\.?\d)\d*\.?\d*(?:[Ee][+-]?\d+)?\z} \
+  ? (self =~ %r{[\.Ee]} ? self.to_f : self.to_i)
+  : nil
+end; end
+
+runcmd = [opt[:memstat] || Pathname.which('memstat')].flatten
+
+lines = IO.popen(runcmd).readlines.map {|l| l.chomp.split(/:\s+/, 2)}
+puts JSON.generate(Hash[*lines.inject([]) {|l,p|
+  if p[0] == 'Server'
+    p[1] =~ %r{(.*)\s\((\d+)\)$} or raise "'#{p[1]}' - unexpected format"
+    l.push([$1, {_info: {port: $2.to_i}}])
+  else
+    key = p[0].sub(/^\s+/, '')
+    m = p[1].as_number
+    if m.nil?
+      l[-1][-1][:_info][key] = p[1]
+    else
+      l[-1][-1][key] = m
+    end
+  end
+  l
+}.flatten])
