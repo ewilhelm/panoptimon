@@ -25,13 +25,23 @@ class String; def as_number # from perlfaq4
   : nil
 end; end
 
-runcmd = [opt[:memstat] || Pathname.which('memstat')].flatten
+class Array; def to_h ; Hash[*self.flatten]; end; end
+
+hosts = opt[:hosts] || {default: 'localhost'}
+hosts.values.each {|x| x += ':11211' unless x =~ /:\d+$/}
+hostmap = hosts.map {|k,v| [v,k]}.to_h
+
+runcmd = [opt[:memstat] || Pathname.which('memstat')].flatten.push(
+  '--servers=' + hostmap.keys.join(',')
+)
 
 lines = IO.popen(runcmd).readlines.map {|l| l.chomp.split(/:\s+/, 2)}
-puts JSON.generate(Hash[*lines.inject([]) {|l,p|
+puts JSON.generate(lines.inject([]) {|l,p|
   if p[0] == 'Server'
     p[1] =~ %r{(.*)\s\((\d+)\)$} or raise "'#{p[1]}' - unexpected format"
-    l.push([$1, {_info: {port: $2.to_i}}])
+    host,port = $1,$2
+    name = hostmap["#{host}:#{port}"] or raise "unnamed host:port '#{host}:#{port}'"
+    l.push([name, {_info: {host: host, port: port.to_i}}])
   else
     key = p[0].sub(/^\s+/, '')
     m = p[1].as_number
@@ -42,4 +52,4 @@ puts JSON.generate(Hash[*lines.inject([]) {|l,p|
     end
   end
   l
-}.flatten])
+}.to_h)
