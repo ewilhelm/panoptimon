@@ -12,15 +12,15 @@
       // uid/gid : [35, 47], or by excluding: ["-not", 0, 42]
       // permissions: "0[67][45]0" // right-anchored regexp
     },
-    '/opt' : {"count_only" : true}, // skip stat() on contents
-    '/vmlinuz' : {
+    "/opt" : {"count_only" : true}, // skip stat() on contents
+    "/vmlinuz" : {
       "path"   : "/",
       "only"   : ["vmlinuz"],       // explicit list / skip readdir()
       "filter" : ["symlink"],       // must be a symlink
       "mtime"  : {"-min" : 3600},   // relative to Time.now
     },
-    '/bin symlinks' : {"path" : "/bin/", "filter" : ["symlink"]},
-    '/usr/bin swapfiles' : {"path" : "/usr/bin/", "glob" : ".*.swp"}
+    "/bin symlinks" : {"path" : "/bin/", "filter" : ["symlink"]},
+    "/usr/bin swapfiles" : {"path" : "/usr/bin/", "glob" : ".*.swp"}
   }
 }
 
