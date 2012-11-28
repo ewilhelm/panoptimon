@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'pathname'
+
+def filters (list)
+  ok = %w{blockdev chardev directory file pipe setgid setuid socket sticky
+    symlink world_readable world_writable zero}
+  not_ok = list - ok
+  list.map! {|i| i + '?'}
+  raise "unsupported: '#{not_ok}'" if not_ok.length > 0
+  return ->(f) {
+    return list.find {|t| not(f.send(t))} ? false : true
+  }
+end
+
+def report (key, c) 
+  path = c[:path] || key
+
+  {}
+end
+
+def run (opt)
+  p = opt[:paths] or raise "'paths' argument required!"
+
+  puts JSON.generate(Hash[p.map {|k,v| [k, report(k,v)]}])
+end
+
+run(JSON::parse(ARGV[0], {symbolize_names: true})) if __FILE__ == $0

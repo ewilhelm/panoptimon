@@ -1,0 +1,8 @@
+{
+  "description" : "count / stat some files",
+  "-examples" : [
+    {"/some/dir/" : {}},
+    {"/some/dir/" : {"match" : "^\\..*\\.swp$"},
+    "1+/some/dir" : {"path" : "/some/dir", "glob" : ".*.swp"}}
+  ]
+}
