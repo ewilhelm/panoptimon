@@ -7,8 +7,8 @@ def filters (list)
   ok = %w{blockdev chardev directory file pipe setgid setuid socket sticky
     symlink world_readable world_writable zero}
   not_ok = list - ok
-  list.map! {|i| i + '?'}
   raise "unsupported: '#{not_ok}'" if not_ok.length > 0
+  list.map! {|i| i + '?'}
   return ->(f) {
     return list.find {|t| not(f.send(t))} ? false : true
   }
