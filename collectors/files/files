@@ -30,7 +30,17 @@ def report (key, c)
     ->(s) { sprintf("%04o", s.mode & 0777) =~ p }
   }.call(c[:permissions])) if c[:permissions]
   # TODO for atime,mtime,ctime, size
-  # TODO uid,gid
+  [:uid, :gid].find_all {|k| c[k]}.each {|k|
+    l = c[k].kind_of?(Array) ? c[k] : [c[k]]
+    neg = l[0] == 'not' ? l.shift : nil
+    l = Hash[l.map {|i| [i.to_i, true]}]
+    sf.push(
+      neg ? ->(s) {not l.include?(s.send(k))}
+          : ->(s) {l.include?(s.send(k))}
+    )
+
+  }
+
 
   no_stat = c[:no_list] && sf.length == 0 # OPTIMIZATION
 
@@ -71,6 +81,7 @@ def report (key, c)
       .map {|n| [n,v.send(n)]} +
       %w{atime mtime ctime}.map {|n| [n,v.send(n).to_i]}] : nil]
   }])
+  # TODO _info => {symlinks => {filename => readlink, ...}
 end
 
 def run (opt)

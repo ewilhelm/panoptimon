@@ -9,7 +9,7 @@
       "atime" : {"min": 1354051358},
       // max, (and relative: -min/-max)
       // also for: mtime, ctime, size (only absolute min/max)
-      // uid/gid : [35, 47], or by excluding: ["-not", 0, 42]
+      // uid/gid : [35, 47], or by excluding: ["not", 0, 42]
       // permissions: "0[67][45]0" // right-anchored regexp
     },
     "/opt" : {"no_list" : true},    // will skip stat() on contents
