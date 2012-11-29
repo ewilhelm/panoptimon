@@ -18,6 +18,33 @@ def filters (list)
   return ->(f) { return list.all? {|t| t.call(f)} ? true : false }
 end
 
+class Code < Proc
+  attr_accessor :source
+  def self.new (*args, src)
+    src = '->(' + args.join(',') + ') {' + src + '}'
+    block = eval(src)
+    super(&block).tap {|x| x.source = src}
+  end
+end
+
+def minmax (prop, c) # c is hash of min|-min / max|-max
+  unrel = ->(k) {
+    relk = '-'.+(k.to_s).to_sym
+    c[k] ? c[k].to_i :
+      c[relk] ?  "Time.now.to_i - " + c[relk].to_i.to_s
+      : nil
+  }
+  checks = {min: '>=', max: '<='}.map {|k,v|
+    (abs = unrel[k]) ? ["#{v} #{abs}"] : []
+  }.flatten
+  Code.new(:s,
+    checks.length > 1 ?
+      "v = s.send('#{prop}').to_i; " +
+        checks.map {|cmp| 'v ' + cmp}.join(' && ')
+    : "s.send('#{prop}').to_i " + checks[0]
+  )
+end
+
 # should prep the report per key (so it can be prepped once, stored and
 # re-run in persistent mode)
 def report (key, c)
@@ -29,7 +56,14 @@ def report (key, c)
     p = /#{p}$/
     ->(s) { sprintf("%04o", s.mode & 0777) =~ p }
   }.call(c[:permissions])) if c[:permissions]
-  # TODO for atime,mtime,ctime, size
+  [:atime, :mtime, :ctime].find_all {|k| c[k]}.each {|k|
+    sf.push(minmax(k, c[k]))
+  }
+  [:size].find_all {|k| c[k]}.each {|k|
+    raise "relative values are nonsensical for #{k}" if
+      c[k][:'-min'] or c[k][:'-max']
+    sf.push(minmax(k, c[k]))
+  }
   [:uid, :gid].find_all {|k| c[k]}.each {|k|
     l = c[k].kind_of?(Array) ? c[k] : [c[k]]
     neg = l[0] == 'not' ? l.shift : nil
@@ -38,7 +72,6 @@ def report (key, c)
       neg ? ->(s) {not l.include?(s.send(k))}
           : ->(s) {l.include?(s.send(k))}
     )
-
   }
 
 
@@ -75,7 +108,7 @@ def report (key, c)
 
   res = {count: files.keys.length}
   return res if c[:no_list]
-  res.merge('' => Hash[files.map {|k,v|
+  files.length == 0 ?  res : res.merge('' => Hash[files.map {|k,v|
     [k,v ? Hash[
       %w{dev ino mode nlink uid gid rdev size blksize blocks}
       .map {|n| [n,v.send(n)]} +
