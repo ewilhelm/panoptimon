@@ -29,6 +29,10 @@ def report (key, c)
     p = /#{p}$/
     ->(s) { sprintf("%04o", s.mode & 0777) =~ p }
   }.call(c[:permissions])) if c[:permissions]
+  # TODO for atime,mtime,ctime, size
+  # TODO uid,gid
+
+  no_stat = c[:no_list] && sf.length == 0 # OPTIMIZATION
 
   nf = [] # list of checks which must all return true per name
   if c[:skip]
@@ -40,30 +44,33 @@ def report (key, c)
   end
 
 
-  files =
+  # TODO I think lstat is the way to go - assumes you want to know about
+  # symlinks more than their targets (make it an option?)
+
+  files = Hash[
   c[:only] ?
-    only.map {|p| begin; path.+(p).stat; rescue; nil; end} :
-  ->(got) {
-    # c[:no_stat] ? ...
-    return got
+    c[:only].map {|f| [f, begin; path.+(f).lstat; rescue; nil; end]} :
+  ->(got) { no_stat ?
+      got.map {|f| [f.to_s, nil]}
+    : got.map {|f| [f.to_s, path.+(f).lstat]}
   }.call(
     c[:glob] ?
       Pathname.glob(path + c[:glob]).map {|n| n.relative_path_from(path)} :
     c[:match] ?
-      path.children(false).find_all {|x| x.to_s =~ c[:match]}
+      path.children(false).find_all {|x| x.to_s =~ /#{c[:match]}/o}
     : path.children(false)
-  )
-  # TODO I think lstat is the way to go - assumes you want to know about
-  # symlinks more than their targets (make it an option?)
-  files = files.find_all {|f| s = path.+(f).lstat;
-    sf.all? {|c| c.call(s)}
-  } if sf.length
-  files = files.find_all {|f| name = f.to_s; nf.all? {|c| c.call(name)}
-  } if nf.length
+  )]
+  files.keep_if {|f,s| nf.all? {|c| c.call(f)} } if nf.length > 0
+  files.keep_if {|f,s| sf.all? {|c| c.call(s)} } if sf.length > 0
 
-  warn files
-
-  {}
+  res = {count: files.keys.length}
+  return res if c[:no_list]
+  res.merge('' => Hash[files.map {|k,v|
+    [k,v ? Hash[
+      %w{dev ino mode nlink uid gid rdev size blksize blocks}
+      .map {|n| [n,v.send(n)]} +
+      %w{atime mtime ctime}.map {|n| [n,v.send(n).to_i]}] : nil]
+  }])
 end
 
 def run (opt)

@@ -12,7 +12,9 @@
       // uid/gid : [35, 47], or by excluding: ["-not", 0, 42]
       // permissions: "0[67][45]0" // right-anchored regexp
     },
-    "/opt" : {"count_only" : true}, // skip stat() on contents
+    "/opt" : {"no_list" : true},    // will skip stat() on contents
+    "/bin" : {"no_list" : true,     // will only return the count,
+      "mtime" : {"-min" : 600}},    // but stat is needed for the check
     "/vmlinuz" : {
       "path"   : "/",
       "only"   : ["vmlinuz"],       // explicit list / skip readdir()
