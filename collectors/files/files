@@ -3,19 +3,67 @@
 require 'json'
 require 'pathname'
 
+# given a list of attributes
+# returns a function which expects a file or stat object and will answer
+# true if all of the attributes are true about that object
 def filters (list)
   ok = %w{blockdev chardev directory file pipe setgid setuid socket sticky
     symlink world_readable world_writable zero}
+  ok = ok + ok.map {|i| '!'+i}
   not_ok = list - ok
   raise "unsupported: '#{not_ok}'" if not_ok.length > 0
-  list.map! {|i| i + '?'}
+  list.map! {|i| i = i+'?';
+    i.sub!(/^!/, '') ? ->(f) {not(f.send(i))} : ->(f){f.send(i)}
+  }
   return ->(f) {
-    return list.find {|t| not(f.send(t))} ? false : true
+    return list.find {|t| not(t.call(f))} ? false : true
   }
 end
 
-def report (key, c) 
-  path = c[:path] || key
+# should prep the report per key (so it can be prepped once, stored and
+# re-run in persistent mode)
+def report (key, c)
+  path = Pathname.new(c[:path] || key.to_s)
+
+  sf = [] # list of checks which must all return true per stat
+  sf.push(filters(c[:filters])) if c[:filters]
+  sf.push(->(p) {
+    p = /#{p}$/
+    ->(s) { sprintf("%04o", s.mode & 0777) =~ p }
+  }.call(c[:permissions])) if c[:permissions]
+
+  nf = [] # list of checks which must all return true per name
+  if c[:skip]
+    nf.push(->(list){
+      skips = Hash[list.map {|n| [n,true]}]
+      return ->(f) { skips[f.to_s] ? false : true }
+    }.call(c[:skip]))
+    warn "'skip' and 'only' options nonsensical" if c[:only]
+  end
+
+
+  files =
+  c[:only] ?
+    only.map {|p| begin; path.+(p).stat; rescue; nil; end} :
+  ->(got) {
+    # c[:no_stat] ? ...
+    return got
+  }.call(
+    c[:glob] ?
+      Pathname.glob(path + c[:glob]).map {|n| n.relative_path_from(path)} :
+    c[:match] ?
+      path.children(false).find_all {|x| x.to_s =~ c[:match]}
+    : path.children(false)
+  )
+  # TODO I think lstat is the way to go - assumes you want to know about
+  # symlinks more than their targets (make it an option?)
+  files = files.find_all {|f| s = path.+(f).lstat;
+    sf.all? {|c| c.call(s)}
+  } if sf.length
+  files = files.find_all {|f| name = f.to_s; nf.all? {|c| c.call(name)}
+  } if nf.length
+
+  warn files
 
   {}
 end
