@@ -15,9 +15,7 @@ def filters (list)
   list.map! {|i| i = i+'?';
     i.sub!(/^!/, '') ? ->(f) {not(f.send(i))} : ->(f){f.send(i)}
   }
-  return ->(f) {
-    return list.find {|t| not(t.call(f))} ? false : true
-  }
+  return ->(f) { return list.all? {|t| t.call(f)} ? true : false }
 end
 
 # should prep the report per key (so it can be prepped once, stored and
