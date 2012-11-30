@@ -53,9 +53,12 @@ def report (key, c)
   sf = [] # list of checks which must all return true per stat
   sf.push(filters(c[:filters])) if c[:filters]
   sf.push(->(p) {
-    p = /#{p}$/
-    ->(s) { sprintf("%04o", s.mode & 0777) =~ p }
-  }.call(c[:permissions])) if c[:permissions]
+    p.sub!(/^& 0/, '') ?
+      ->(){p = p.to_i(8);
+        ->(s) { s.mode & 0777 & p > 0 }}[]
+    : ->(){p = /#{p}$/
+        ->(s) { sprintf("%04o", s.mode & 0777) =~ p }}[]
+  }.call(c[:mode])) if c[:mode]
   [:atime, :mtime, :ctime].find_all {|k| c[k]}.each {|k|
     sf.push(minmax(k, c[k]))
   }

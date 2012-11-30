@@ -6,11 +6,14 @@
     "/tmp swapfiles" : {        // names must be unique
       "path" : "/tmp",          // explicit path
       "match" : "^\\..*\.swp$", // regular expression match
-      "atime" : {"min": 1354051358},
-      // max, (and relative: -min/-max)
+      "atime" : {"min": 1354051358}, // in absolute epoch seconds
+      // also max, (and relative time using -min/-max)
       // also for: mtime, ctime, size (only absolute min/max)
+      //
       // uid/gid : [35, 47], or by excluding: ["not", 0, 42]
-      // permissions: "0[67][45]0" // right-anchored regexp
+      //
+      // mode: "0[67][45]0" // a right-anchored regexp
+      // mode: "& 0111"     // octal bitmask
     },
     "/opt" : {"no_list" : true},    // will skip stat() on contents
     "/bin" : {"no_list" : true,     // will only return the count,
