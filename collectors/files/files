@@ -1,0 +1,129 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'pathname'
+
+# given a list of attributes
+# returns a function which expects a file or stat object and will answer
+# true if all of the attributes are true about that object
+def filters (list)
+  ok = %w{blockdev chardev directory file pipe setgid setuid socket sticky
+    symlink world_readable world_writable zero}
+  ok = ok + ok.map {|i| '!'+i}
+  not_ok = list - ok
+  raise "unsupported: '#{not_ok}'" if not_ok.length > 0
+  list.map! {|i| i = i+'?';
+    i.sub!(/^!/, '') ? ->(f) {not(f.send(i))} : ->(f){f.send(i)}
+  }
+  return ->(f) { return list.all? {|t| t.call(f)} ? true : false }
+end
+
+class Code < Proc
+  attr_accessor :source
+  def self.new (*args, src)
+    src = '->(' + args.join(',') + ') {' + src + '}'
+    block = eval(src)
+    super(&block).tap {|x| x.source = src}
+  end
+end
+
+def minmax (prop, c) # c is hash of min|-min / max|-max
+  unrel = ->(k) {
+    relk = '-'.+(k.to_s).to_sym
+    c[k] ? c[k].to_i :
+      c[relk] ?  "Time.now.to_i - " + c[relk].to_i.to_s
+      : nil
+  }
+  checks = {min: '>=', max: '<='}.map {|k,v|
+    (abs = unrel[k]) ? ["#{v} #{abs}"] : []
+  }.flatten
+  Code.new(:s,
+    checks.length > 1 ?
+      "v = s.send('#{prop}').to_i; " +
+        checks.map {|cmp| 'v ' + cmp}.join(' && ')
+    : "s.send('#{prop}').to_i " + checks[0]
+  )
+end
+
+# should prep the report per key (so it can be prepped once, stored and
+# re-run in persistent mode)
+def report (key, c)
+  path = Pathname.new(c[:path] || key.to_s)
+
+  sf = [] # list of checks which must all return true per stat
+  sf.push(filters(c[:filters])) if c[:filters]
+  sf.push(->(p) {
+    p.sub!(/^& 0/, '') ?
+      ->(){p = p.to_i(8);
+        ->(s) { s.mode & 0777 & p > 0 }}[]
+    : ->(){p = /#{p}$/
+        ->(s) { sprintf("%04o", s.mode & 0777) =~ p }}[]
+  }.call(c[:mode])) if c[:mode]
+  [:atime, :mtime, :ctime].find_all {|k| c[k]}.each {|k|
+    sf.push(minmax(k, c[k]))
+  }
+  [:size].find_all {|k| c[k]}.each {|k|
+    raise "relative values are nonsensical for #{k}" if
+      c[k][:'-min'] or c[k][:'-max']
+    sf.push(minmax(k, c[k]))
+  }
+  [:uid, :gid].find_all {|k| c[k]}.each {|k|
+    l = c[k].kind_of?(Array) ? c[k] : [c[k]]
+    neg = l[0] == 'not' ? l.shift : nil
+    l = Hash[l.map {|i| [i.to_i, true]}]
+    sf.push(
+      neg ? ->(s) {not l.include?(s.send(k))}
+          : ->(s) {l.include?(s.send(k))}
+    )
+  }
+
+
+  no_stat = c[:no_list] && sf.length == 0 # OPTIMIZATION
+
+  nf = [] # list of checks which must all return true per name
+  if c[:skip]
+    nf.push(->(list){
+      skips = Hash[list.map {|n| [n,true]}]
+      return ->(f) { skips[f.to_s] ? false : true }
+    }.call(c[:skip]))
+    warn "'skip' and 'only' options nonsensical" if c[:only]
+  end
+
+
+  # TODO I think lstat is the way to go - assumes you want to know about
+  # symlinks more than their targets (make it an option?)
+
+  files = Hash[
+  c[:only] ?
+    c[:only].map {|f| [f, begin; path.+(f).lstat; rescue; nil; end]} :
+  ->(got) { no_stat ?
+      got.map {|f| [f.to_s, nil]}
+    : got.map {|f| [f.to_s, path.+(f).lstat]}
+  }.call(
+    c[:glob] ?
+      Pathname.glob(path + c[:glob]).map {|n| n.relative_path_from(path)} :
+    c[:match] ?
+      path.children(false).find_all {|x| x.to_s =~ /#{c[:match]}/o}
+    : path.children(false)
+  )]
+  files.keep_if {|f,s| nf.all? {|c| c.call(f)} } if nf.length > 0
+  files.keep_if {|f,s| sf.all? {|c| c.call(s)} } if sf.length > 0
+
+  res = {count: files.keys.length}
+  return res if c[:no_list]
+  files.length == 0 ?  res : res.merge('' => Hash[files.map {|k,v|
+    [k,v ? Hash[
+      %w{dev ino mode nlink uid gid rdev size blksize blocks}
+      .map {|n| [n,v.send(n)]} +
+      %w{atime mtime ctime}.map {|n| [n,v.send(n).to_i]}] : nil]
+  }])
+  # TODO _info => {symlinks => {filename => readlink, ...}
+end
+
+def run (opt)
+  p = opt[:paths] or raise "'paths' argument required!"
+
+  puts JSON.generate(Hash[p.map {|k,v| [k, report(k,v)]}])
+end
+
+run(JSON::parse(ARGV[0], {symbolize_names: true})) if __FILE__ == $0
