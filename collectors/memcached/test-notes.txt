@@ -1,0 +1,3 @@
+ # just lie about where memstat is to replay a static copy
+ ruby collectors/memcached/memcached '{"memstat" : ["cat", "/tmp/memstat-sample.txt"]}'
+
