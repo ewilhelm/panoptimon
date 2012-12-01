@@ -63,11 +63,12 @@ class Metric < Hash
 
   def _flatten_hash (i,p,h)
     h.each {|k,v|
-      k = "#{p}|#{k}"
-      if v.is_a?(Hash)
-        _flatten_hash(i, k, v)
+      ok = "#{p}|#{k}"
+      # TODO reject non-numeric data?
+      if k != '_info' and v.is_a?(Hash)
+        _flatten_hash(i, ok, v)
       else
-        i[k] = v
+        i[ok] = v
       end
     }
     return i

@@ -1,0 +1,14 @@
+{
+  "description" : "count / stat some files",
+  "paths" : {
+    "/ writable dirs" : {"path" : "/",
+      "only" : ["bin", "boot", "dev", "etc", "home", "lib", "usr"],
+      "skip" : ["tmp"],
+      "filters" : ["directory", "world_writable"]},
+  },
+  "-examples" : [
+    {"/some/dir/" : {}},
+    {"/some/dir/" : {"match" : "^\\..*\\.swp$"},
+    "1+/some/dir" : {"path" : "/some/dir", "glob" : ".*.swp"}}
+  ]
+}
