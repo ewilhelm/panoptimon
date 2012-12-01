@@ -3,6 +3,12 @@
 require 'mysql';
 require 'json';
 
+class String; def as_number # from perlfaq4
+  self =~ %r{\A[+-]?(?=\.?\d)\d*\.?\d*(?:[Ee][+-]?\d+)?\z} \
+  ? (self =~ %r{[\.Ee]} ? self.to_f : self.to_i)
+  : nil
+end; end
+
 class Mysql_status
 
 def self.get_status (db)
@@ -30,8 +36,9 @@ def self.run (config)
   m.merge(get_slave_status(db))
   info = {}
   m.keys.each {|k|
-    if m[k] =~ /^\d+(?:\.\d+)?$/
-      m[k] = $1 ? m[k].to_f : m[k].to_i
+    n = m[k].as_number
+    if n
+      m[k] = n 
     else
       info[k] = m.delete(k)
     end
