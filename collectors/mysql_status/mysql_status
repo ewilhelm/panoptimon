@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+
+require 'mysql';
+require 'json';
+
+class String; def as_number # from perlfaq4
+  self =~ %r{\A[+-]?(?=\.?\d)\d*\.?\d*(?:[Ee][+-]?\d+)?\z} \
+  ? (self =~ %r{[\.Ee]} ? self.to_f : self.to_i)
+  : nil
+end; end
+
+class Mysql_status
+
+def self.get_status (db)
+  rs = db.query("SHOW STATUS")
+  h = {}
+  while( r = rs.fetch_row )
+    h[r[0].downcase] = r[1]
+  end
+  return h
+end
+
+def self.get_slave_status (db)
+  rs = db.query('SHOW SLAVE STATUS')
+  h = rs.fetch_hash or return {}
+  raise "too many results" if rs.num_rows > 1
+  return Hash[* h.keys.map {|k| [k.downcase, h[k]]}.flatten]
+end
+
+def self.run (config)
+  db = Mysql.new(*
+    %w{hostname username password database port socket}.
+    map {|k| config[k]})
+
+  m = get_status(db)
+  m.merge(get_slave_status(db))
+  info = {}
+  m.keys.each {|k|
+    n = m[k].as_number
+    if n
+      m[k] = n 
+    else
+      info[k] = m.delete(k)
+    end
+  }
+  m[:_info] = info if info.length > 0
+  puts JSON::generate(m)
+end
+
+end
+
+Mysql_status.run(JSON::parse(ARGV[0])) if __FILE__ == $0
