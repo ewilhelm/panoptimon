@@ -21,3 +21,4 @@ tmp
 
 # for all your experimental needs e.g. symlinks of configs
 /x/
+.vagrant
