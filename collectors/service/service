@@ -19,15 +19,20 @@ handler = {
     mon = srv.delete(:'-monitor')
     cmd = [o[:svstat] || 'svstat'].flatten
     fn = mon.map {|n| Pathname.glob(n.to_s)}.flatten.
-        map {|p| [p.basename.to_s.to_sym, p.to_s]}.to_h.
+        map {|p| [p.to_s, p.basename.to_s.to_sym]}.to_h.
       merge(
         srv.keys.map {|n| [n, srv[n][:path] || '/service/' + n]}.to_h)
     ->() {
       stat = IO.popen(cmd + fn.keys.map{|k| k.to_s}).readlines
       stat.map {|l| l.chomp!
-        info = l.match(/\A(?<key>\S+):\s+(?<state>up|down)
-          (?:\s+\(pid (?<pid>\d+)\))? (<seconds>\d+) seconds/x) or
-            raise "cannot parse #{l}"
+        info = l.match(%r{
+          \A(?<key>\S+):\s+
+          (?<state>up|down)
+          (?:\s+\(pid\s+(?<pid>\d+)\))?\s+
+          (?<seconds>\d+)\s+seconds
+          (?:,\s+normally\s(?<normally>\S+))?
+        }x) or raise "cannot parse #{l}"
+        warn info.to_h
 
         #fn[k], 
       }
