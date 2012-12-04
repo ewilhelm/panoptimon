@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2012 Sourcefire, Inc.
+
+require 'json'
+require 'pathname'
+
+$stdout.sync = true # persistent process
+opt = JSON::parse(ARGV[0], {symbolize_names: true})
+opt.merge!( interval: 60, flaptime: 30, since: 900 ) {|k,a,b| a}
+
+class MatchData; def to_h
+  Hash[self.names.map {|n| [n.to_sym, self[n]]}]
+end; end
+class Array; def to_h; Hash[self]; end; end
+
+handler = {
+  daemontools: ->(srv){
+    o = srv.delete(:'-options') || {}
+    mon = srv.delete(:'-monitor')
+    cmd = [o[:svstat] || 'svstat'].flatten
+    fn = mon.map {|n| Pathname.glob(n.to_s)}.flatten.
+        map {|p| [p.basename.to_s.to_sym, p.to_s]}.to_h.
+      merge(
+        srv.keys.map {|n| [n, srv[n][:path] || '/service/' + n]}.to_h)
+    ->() {
+      stat = IO.popen(cmd + fn.keys.map{|k| k.to_s}).readlines
+      stat.map {|l| l.chomp!
+        info = l.match(/\A(?<key>\S+):\s+(?<state>up|down)
+          (?:\s+\(pid (?<pid>\d+)\))? (<seconds>\d+) seconds/x) or
+            raise "cannot parse #{l}"
+
+        #fn[k], 
+      }
+    }
+  },
+}
+
+services = Hash[opt[:services].map {|k,v|
+  how = handler[k] or raise "unknown service type #{k}"; [k, how[v]]}]
+
+while true
+  metrics = services.map {|k,v| [k, v[]]}.to_h
+  puts JSON::generate(metrics)
+  sleep(opt[:interval])
+end
