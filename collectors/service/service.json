@@ -1,0 +1,7 @@
+{
+  "interval" : 60,
+  "flaptime" : 30, "since" : 900,
+  "services" : {
+    "daemontools" : { "-monitor" : ["/service/*"] }
+  }
+}

@@ -1,0 +1,84 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2012 Sourcefire, Inc.
+
+require 'json'
+require 'pathname'
+
+$stdout.sync = true # persistent process
+opt = JSON::parse(ARGV[0], {symbolize_names: true})
+opt.merge!( interval: 60, flaptime: 30, since: 900 ) {|k,a,b| a}
+
+class MatchData; def to_h
+  Hash[self.names.map {|n| [n.to_sym, self[n]]}]
+end; end
+class Array; def to_h; Hash[self]; end; end
+
+handler = {
+  daemontools: ->(srv){
+    o = srv.delete(:'-options') || {}
+    mon = srv.delete(:'-monitor')
+    cmd = [o[:svstat] || 'svstat'].flatten
+    fn = mon.map {|n| Pathname.glob(n.to_s)}.flatten.
+        map {|p| [p.to_s, p.basename.to_s.to_sym]}.to_h.
+      merge(
+        srv.keys.map {|n| [n, srv[n][:path] || '/service/' + n]}.to_h)
+    ->() {
+      stat = IO.popen(cmd + fn.keys.map{|k| k.to_s}).readlines
+      stat.map {|l| l.chomp!
+        info = l.match(%r{
+          \A(?<key>\S+):\s+
+          (?<state>up|down)
+          (?:\s+\(pid\s+(?<pid>\d+)\))?\s+
+          (?<duration>\d+)\s+seconds
+          (?:,\s+normally\s(?<normally>\S+))?
+        }x) or raise "cannot parse #{l}"
+        info = info.to_h 
+        name = fn[info.delete(:key)]
+        [name, info]
+      }.to_h
+    }
+  },
+}
+
+services = Hash[opt[:services].map {|k,v|
+  how = handler[k] or raise "unknown service type #{k}"; [k, how[v]]}]
+
+class AFlap
+  def initialize (opts = {})
+    @since    = opts[:since] || 900
+    @flaptime = opts[:flaptime] || 5
+    @history = {}
+  end
+  def log (k, i)
+    l = @history[k] ||= []
+    t = Time.now
+    l.shift while(l.length > 0 and l[0][:time] < t - @since)
+    logged = {
+      time: t,
+      duration: i[:duration].to_i,
+      up: (i[:state] == 'up' ? true : false)
+    }
+    l.push(logged)
+    count = 0;
+    l.reverse.each {|i|
+      break if i[:duration] > @flaptime or not(i[:up])
+      count +=1}
+    {flaps: count, up: (logged[:up] ? 1 : -1) * logged[:duration]}
+  end
+end
+
+hist = AFlap.new(opt)
+while true
+  metrics = services.map {|k,v|
+    data = v[].map {|n,i|
+      [n, hist.log("#{k}|#{n}", i)]
+    }.to_h
+    [k, data]
+  }.to_h
+  puts JSON::generate(metrics)
+  sleep(opt[:interval])
+  if opt[:limit]
+    opt[:limit] -= 1
+    break if opt[:limit] == 0
+  end
+end
