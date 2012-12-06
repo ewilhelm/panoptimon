@@ -1,0 +1,27 @@
+#!/usr/bin/env perl
+
+use v5.10;
+use warnings;
+use strict;
+
+my $countfile = __FILE__ . '.counter';
+
+my $count = 1 + do {
+  open(my $fh, '<', $countfile) or die "cannot open '$countfile' - $!";
+  chomp(my $c = <$fh>);
+  $c;
+};
+
+my %data = map({ my $file = $_;
+  open(my $fh, '<', $file) or die "cannot open '$file' - $!";
+  chomp(my @lines = <$fh>);
+  $count = 1 if @lines < $count and warn "resetting\n";
+  ($file => \@lines);
+} @ARGV);
+
+say {
+  open(my $fh, '>', $countfile) or die "cannot open '$countfile' - $!";
+  $fh
+} $count;
+
+say "$_: $data{$_}[$count - 1]" for keys %data; 
