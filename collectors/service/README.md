@@ -24,6 +24,9 @@ systemd: `systemctl list-units --full --type=service --all`, `systemctl show NAM
 
 ```json
 {
+  interval: 60
+  flaptime: 30,
+  since: 900,
   services: {
     init: { foo : { status_cmd : "..."} },
     systemd: {
@@ -38,3 +41,11 @@ systemd: `systemctl list-units --full --type=service --all`, `systemctl show NAM
   }
 }
 ```
+
+## Output
+
+* up: seconds the service has been up (negative if it has been shutdown)
+* flaps: number of flaps (runs under 'flaptime') within the 'since' horizon
+
+  services|daemontools|syslog-ng|up => $seconds
+  services|daemontools|syslog-ng|flaps => $n

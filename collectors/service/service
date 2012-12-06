@@ -29,13 +29,13 @@ handler = {
           \A(?<key>\S+):\s+
           (?<state>up|down)
           (?:\s+\(pid\s+(?<pid>\d+)\))?\s+
-          (?<seconds>\d+)\s+seconds
+          (?<duration>\d+)\s+seconds
           (?:,\s+normally\s(?<normally>\S+))?
         }x) or raise "cannot parse #{l}"
-        warn info.to_h
-
-        #fn[k], 
-      }
+        info = info.to_h 
+        name = fn[info.delete(:key)]
+        [name, info]
+      }.to_h
     }
   },
 }
@@ -43,8 +43,42 @@ handler = {
 services = Hash[opt[:services].map {|k,v|
   how = handler[k] or raise "unknown service type #{k}"; [k, how[v]]}]
 
+class AFlap
+  def initialize (opts = {})
+    @since    = opts[:since] || 900
+    @flaptime = opts[:flaptime] || 5
+    @history = {}
+  end
+  def log (k, i)
+    l = @history[k] ||= []
+    t = Time.now
+    l.shift while(l.length > 0 and l[0][:time] < t - @since)
+    logged = {
+      time: t,
+      duration: i[:duration].to_i,
+      up: (i[:state] == 'up' ? true : false)
+    }
+    l.push(logged)
+    count = 0;
+    l.reverse.each {|i|
+      break if i[:duration] > @flaptime or not(i[:up])
+      count +=1}
+    {flaps: count, up: (logged[:up] ? 1 : -1) * logged[:duration]}
+  end
+end
+
+hist = AFlap.new(opt)
 while true
-  metrics = services.map {|k,v| [k, v[]]}.to_h
+  metrics = services.map {|k,v|
+    data = v[].map {|n,i|
+      [n, hist.log("#{k}|#{n}", i)]
+    }.to_h
+    [k, data]
+  }.to_h
   puts JSON::generate(metrics)
   sleep(opt[:interval])
+  if opt[:limit]
+    opt[:limit] -= 1
+    break if opt[:limit] == 0
+  end
 end

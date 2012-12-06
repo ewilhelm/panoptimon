@@ -1,0 +1,11 @@
+up (pid 3655) 30392 seconds
+up (pid 3655) 30452 seconds
+up (pid 3655) 30512 seconds
+up (pid 3655) 30572 seconds
+down 3 seconds, normally up
+down 63 seconds, normally up
+down 123 seconds, normally up
+down 183 seconds, normally up
+down 243 seconds, normally up
+down 303 seconds, normally up
+down 363 seconds, normally up
