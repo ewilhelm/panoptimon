@@ -1,0 +1,15 @@
+#! /usr/bin/env ruby
+$: << File.expand_path(File.dirname(__FILE__), '../..')
+
+require 'json'
+require 'socket'
+require 'openssl'
+require 'net/http'
+require 'panoptimon-collector-http'
+
+options = JSON.parse(ARGV[0])
+uri     = options.fetch('host')
+
+client = Panoptimon::Collector::HTTP.new(uri)
+puts client.status
+
