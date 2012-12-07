@@ -23,7 +23,9 @@ handler = {
       merge(
         srv.keys.map {|n| [n, srv[n][:path] || '/service/' + n]}.to_h)
     ->() {
-      stat = IO.popen(cmd + fn.keys.map{|k| k.to_s}).readlines
+      p = IO.popen(cmd + fn.keys.map{|k| k.to_s})
+      stat = p.readlines
+      p.close
       stat.map {|l| l.chomp!
         info = l.match(%r{
           \A(?<key>\S+):\s+

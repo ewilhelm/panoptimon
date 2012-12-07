@@ -4,7 +4,7 @@
     "/ writable dirs" : {"path" : "/",
       "only" : ["bin", "boot", "dev", "etc", "home", "lib", "usr"],
       "skip" : ["tmp"],
-      "filters" : ["directory", "world_writable"]},
+      "filters" : ["directory", "world_writable"]}
   },
   "-examples" : [
     {"/some/dir/" : {}},
