@@ -47,7 +47,9 @@ report = opt[:report].keys.map { |k|
 
 while true
 
-  lines = IO.popen(cmd).readlines.map {|l| l.chomp}
+  p = IO.popen(cmd)
+  lines = p.readlines.map {|l| l.chomp}
+  p.close # autoclose my foot
   lines.shift; lines.shift
 
   out = {}
