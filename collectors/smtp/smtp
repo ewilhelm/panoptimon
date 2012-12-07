@@ -10,34 +10,34 @@ host = config['host']
 port = config['port']
 
 module Panoptimon
-	class SMTP
-		attr_reader :host, :port
-
-		def initialize(options={})
-			@host = options[:host]
-			@port = options[:port]
-		end
-
-		def connect
-			begin
-				Timeout::timeout(5) do
-					TCPSocket.new(host, port)
-				end
-				rescue Timeout::Error
-					false
-			end
-		end
-
-		def banner
-			connect ? connect.gets.split.first : nil
-		end
-
-		def banner_json
-			output = {}
-			output[:status] = banner
-			output.to_json
-		end
-	end
+  class SMTP
+    attr_reader :host, :port
+    
+    def initialize(options={})
+      @host = options[:host]
+      @port = options[:port]
+    end
+    
+    def connect
+      begin
+        Timeout::timeout(5) do
+          TCPSocket.new(host, port)
+        end
+      rescue Timeout::Error
+        false
+      end
+    end
+    
+    def banner
+      connect ? connect.gets.split.first : nil
+    end
+    
+    def banner_json
+      output = {}
+      output[:ok] = banner
+      output.to_json
+    end
+  end
 end
 
 puts Panoptimon::SMTP.new(:host => host, :port => port).banner_json
