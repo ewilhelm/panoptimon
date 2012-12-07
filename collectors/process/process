@@ -1,0 +1,59 @@
+#!/usr/bin/env ruby
+
+require 'json'
+class Array; def to_h; Hash[self]; end; end
+
+opt = JSON::parse(ARGV[0], {symbolize_names: true})
+
+pgrep = ['pgrep']
+
+checks = opt[:checks]
+
+# could match a process with more than one check, so keep track
+names = Hash.new {|h,k| h[k] = []}
+found = {}
+checks.each {|n,o|
+  cmd = pgrep + [
+    '-d,',
+    o[:user] ? ['-u', o[:user]] : [],
+    o[:full] ? ['-f', o[:full]] :
+      o[:pattern] ? o[:pattern] : raise("must have 'full' or 'pattern'")
+  ].flatten
+  got = IO.popen(cmd).readline.chomp.split(/,/)
+  got.each {|pid| names[pid].push(n)}
+  found[n] = {count: got.length}
+}
+
+ps = ['ps']
+fields = %w(pid time etime thcount pcpu ni pri vsz rss command)
+fieldcount = fields.length
+
+cnv = {}.tap {|it|
+  to_i = ->(x) {x.to_i}; to_f = ->(x) {x.to_f};
+  to_sec = ->(x) { d = 0; d = $1 if x.sub!(/^\d+-/, '');
+    (h,m,s) = x.split(/:/, 3);
+    d.to_i * 24 * 60**2 + h.to_i * 60**2 + m.to_i * 60 + s.to_i}
+  it.merge!({
+    pcpu: to_f, time: to_sec, etime: to_sec,
+    thcount: to_i, pri: to_i, rss: to_i, ni: to_i, vsz: to_i
+  })
+}
+
+IO.popen(ps + ['-ww', '-o', fields.join(','), '-p', names.keys.join(',')]).
+  readlines.drop(1).each {|l|
+    f = l.chomp.sub(/^\s+/, '').split(/\s+/, fieldcount)
+    h = (0..fieldcount-1).map {|i| [fields[i].to_sym, f[i]]}.to_h
+    pid = h.delete(:pid)
+    inf = %w(command).map {|k| [k, h.delete(k.to_sym)]}.to_h
+    cnv.each {|k,v| h[k] = v[h[k]]}
+    names[pid].each {|n|
+      i = found[n][:i] ||= 0; found[n][:i] += 1
+      found[n][i] = h
+      _info = found[n][:_info] ||= Hash.new {|h,k| h[k] = []}
+      inf.each {|k,v| _info[k].push(v)}
+    }
+  }
+
+found.each {|k,v| v.delete(:i)} # cleanup
+
+puts JSON::generate(found)
