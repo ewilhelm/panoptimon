@@ -32,7 +32,8 @@ fieldcount = fields.length
 cnv = {}.tap {|it|
   to_i = ->(x) {x.to_i}; to_f = ->(x) {x.to_f};
   to_sec = ->(x) { d = 0; d = $1 if x.sub!(/^\d+-/, '');
-    (h,m,s) = x.split(/:/, 3);
+    (h,h,m,s) = x.match(/^(?:(\d+):)?(\d+):(\d+)/).to_a
+    h ||= 0
     d.to_i * 24 * 60**2 + h.to_i * 60**2 + m.to_i * 60 + s.to_i}
   it.merge!({
     pcpu: to_f, time: to_sec, etime: to_sec,

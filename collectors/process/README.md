@@ -14,7 +14,7 @@ The "checks" hash contains a list of check names, plus info for invoking pgrep.
   interval: 60,
   checks: {
     sshd: {
-      pattern: "sshd", # also 'full:  "sshd"
+      pattern: "^sshd", # also 'full:  "^/usr/sbin/sshd"
       user: "root,daemon"
     }
   }
@@ -26,9 +26,10 @@ The "checks" hash contains a list of check names, plus info for invoking pgrep.
 Information about each matched process, plus a count.
 
   process|ssh|count => 1
-  process|ssh|0|time => ...
-  process|ssh|0|etime => ...
-  process|ssh|0|pcpu => ...
+  process|ssh|0|time => 400
+  process|ssh|0|etime => 6000
+  process|ssh|0|pcpu => 0.2
+  process|ssh|0|thcount => 1
   process|ssh|0|rss => ...
   process|ssh|0|nice => ...
   process|ssh|0|priority => ...

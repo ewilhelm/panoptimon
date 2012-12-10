@@ -1,0 +1,7 @@
+{
+  "checks" : {
+    "sshd" : { "full" : "^/usr/sbin/sshd" },
+    "root shells" : { "pattern" : "^(ba)?sh", "user" : "root" },
+    "daemons" : { "user" : "daemon,nobody,www-data" }
+  }
+}
