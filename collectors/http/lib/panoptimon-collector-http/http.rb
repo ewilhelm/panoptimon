@@ -16,7 +16,7 @@ module Panoptimon
       def uri
         @uri
       end
-      
+
       def host
         uri.host
       end
@@ -38,6 +38,10 @@ module Panoptimon
       def response
         connect.request(request)
       end
+
+      def redirect
+        connect.is_a?(Net::HTTPRedirection)
+      end
       
       def scheme
         uri.scheme == 'https' ?	true : false
@@ -51,7 +55,7 @@ module Panoptimon
       end      
 
       def status
-        response.code
+        scheme ? {:status => response.code}.merge!(certificate) : {:status => response.code}
       end      
     end
   end

@@ -1,5 +1,5 @@
 #! /usr/bin/env ruby
-$: << File.expand_path(File.dirname(__FILE__), '../..')
+$: << File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
 
 require 'json'
 require 'socket'
@@ -11,5 +11,5 @@ options = JSON.parse(ARGV[0])
 uri     = options.fetch('host')
 
 client = Panoptimon::Collector::HTTP.new(uri)
-puts client.status
+puts JSON.generate(client.status)
 
