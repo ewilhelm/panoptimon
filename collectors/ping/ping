@@ -1,0 +1,11 @@
+#! /usr/bin/env ruby
+$: << File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
+require 'json'
+require 'net/ping'
+require 'panoptimon-collector-ping'
+     
+client = Panoptimon::Collector::Ping.new(JSON.parse(ARGV[0]))
+puts JSON.generate(client.ping)
+
+
+
