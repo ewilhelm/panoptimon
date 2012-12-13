@@ -24,8 +24,10 @@ roll = ->(conf) {
       }
     }
     rolling.slice!(0, cut_here) if cut_here
+    up = now - start
     return Hash[sums.map {|p,h|
-      [p.to_s, Hash[h.map {|k,v| [k, (v.to_f/p).round(4)]}]]
+      div = up > p ? p : up
+      [p.to_s, Hash[h.map {|k,v| [k, (v.to_f/div).round(4)]}]]
     }]
   }
 }[config]
