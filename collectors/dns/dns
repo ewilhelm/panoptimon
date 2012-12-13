@@ -1,0 +1,9 @@
+#! /usr/bin/env ruby
+
+$: << File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
+require 'rubygems'
+require 'json'
+require 'panoptimon-collector-dns'
+
+client = Panoptimon::Collector::DNS.new(JSON.parse(ARGV[0]))
+puts client.query.to_json
