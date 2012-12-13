@@ -6,7 +6,7 @@ class Monitor
   include Panoptimon::Logger
 
   attr_reader :config, :collectors, :plugins, :cached, :owd,
-    :loaded_plugins
+    :loaded_plugins, :bus
 
   def initialize (args={})
     @collectors = []
