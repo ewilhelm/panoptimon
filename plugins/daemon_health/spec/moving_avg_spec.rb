@@ -9,7 +9,7 @@ describe('calculate a moving average') {
     start = Time.now
     roller = Rollup.new(start, {})
     roller.log(start, {x: 7})
-    out = roller.roll(start+600)
+    out = roller.roll(start+1)
     p out
     out[:x]['per_second'].should == 7
   }

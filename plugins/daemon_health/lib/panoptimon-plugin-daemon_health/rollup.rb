@@ -11,24 +11,24 @@ def log (t, h)
   self.push([t,h])
 end
 
-def roll(now)
-  horizon = now - @periods[0]
+def sunset(horizon)
   cut_here = -1
-  p = 0
+  self.each {|x| break if x[0] > horizon; cut_here += 1 }
+  self.slice!(0..cut_here) if cut_here >= 0
+end
+
+def roll(now)
+  self.sunset(now - @periods[0])
+
   sums = Hash[@periods.map {|p| [p, Hash.new(0)]}]
   self.each {|x|
-    if p == 0 and x[0] < horizon
-      cut_here += 1
-      next
-    elsif @periods[p] and x[0] > now - @periods[p]
-      p += 1
-    end
-    warn "p: #{p}"
-    @periods[p...@periods.length].each {|_|
-      x[1].each {|k,v| sums[_][k] += v} # min/max/n?
+    age = now - x[0]
+    thru = (0...@periods.length).to_a.find {|i| age > @periods[i]} ||
+      @periods.length
+    @periods[0...thru].each {|p|
+      x[1].each {|k,v| sums[p][k] += v} # min/max/n?
     }
   }
-  self.slice!(0, cut_here) if cut_here
   up = now - @start
   return Hash[sums.map {|p,h|
     div = up > p ? p : up
