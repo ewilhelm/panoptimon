@@ -18,6 +18,7 @@ EM.add_periodic_timer(config[:interval], ->(){
     'rss'    => Process.rusage.maxrss,
   })
   m = Metric.new('daemon_health', metrics)
+  warn m
   monitor.bus.notify(m)
 
   then_ = now
@@ -27,5 +28,5 @@ EM.add_periodic_timer(config[:interval], ->(){
 return ->(metric) {
   return if metric.has_key?('daemon_health|uptime') # skip our own data
   if setup; setup[] ; setup = nil; end
-  rolling.log(Time.now, {'metrics' => metric.keys.length})
+  rolling.log('metrics' => metric.keys.length)
 }
