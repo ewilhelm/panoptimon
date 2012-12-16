@@ -16,6 +16,9 @@ EM.add_periodic_timer(config[:interval], ->(){
   metrics = rolling.roll(now).merge({
     'uptime' => (now - start).round(0),
     'rss'    => Process.rusage.maxrss,
+    collectors:     monitor.collectors.length,
+    active_plugins: monitor.plugins.keys.length,
+    loaded_plugins: monitor.loaded_plugins.keys.length,
   })
   m = Metric.new('daemon_health', metrics)
   warn m
@@ -28,5 +31,5 @@ EM.add_periodic_timer(config[:interval], ->(){
 return ->(metric) {
   return if metric.has_key?('daemon_health|uptime') # skip our own data
   if setup; setup[] ; setup = nil; end
-  rolling.log('metrics' => metric.keys.length)
+  rolling.log(metrics: metric.keys.length)
 }
