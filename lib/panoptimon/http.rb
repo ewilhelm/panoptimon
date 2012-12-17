@@ -55,7 +55,7 @@ class HTTP
 
   # path prefix
   def mount (point, app)
-    point.sub(%r{/*$})
+    point.sub(%r{/*$}, '')
     @mount.push([point, app])
   end
 
