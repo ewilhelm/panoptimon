@@ -48,7 +48,7 @@ render = ->(m) {
 }
 
 monitor.enable_cache
-monitor.http.match('/', ->(env) {
+monitor.http.match('/$', ->(env) {
   monitor.logger.debug "passed me #{env}"
   env['rack.logger'].debug "status page request for #{env['REMOTE_ADDR']}"
   # NOTE ^- is the same as monitor.logger
