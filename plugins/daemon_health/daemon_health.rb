@@ -3,7 +3,7 @@ require 'rusage'
 $LOAD_PATH.unshift(File.expand_path('../lib', __FILE__))
 require 'panoptimon-plugin-daemon_health/rollup'
 
-config[:interval] ||= 1 #60
+config[:interval] ||= 60
 
 start = then_ = Time.now
 rolling = Rollup.new(start, config) # brief history
@@ -21,7 +21,6 @@ EM.add_periodic_timer(config[:interval], ->(){
     loaded_plugins: monitor.loaded_plugins.keys.length,
   })
   m = Metric.new('daemon_health', metrics)
-  warn m
   monitor.bus.notify(m)
 
   then_ = now

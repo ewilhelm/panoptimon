@@ -3,7 +3,9 @@ class Rollup < Array
 def initialize(start, config)
   @start = start
   @start ||= Time.now
-  @periods = [60, 15, 5, 1].map {|m| m*60}
+  @periods = (config[:periods] || %w{60m 15m 5m 1m}).map {|m|
+    m.is_a?(String) ? m.sub(/m$/, '') ? m.to_i*60 : m.to_i : m
+  }.sort {|a,b| b <=> a}
   _reset_current(@start)
 end
 
