@@ -16,21 +16,23 @@ module Panoptimon
       # cname: Net::DNS::CNAME
 
       def query
-        Hash[
-          @options[:hosts].map {|k,v|
-            host = v[0]
-            # TODO include record type in output?
-            type = Net::DNS.const_get((v[1] || :a).upcase)
-            records = Resolver(host, type).answer.map(&:value).
+        Hash[@options[:hosts].map {|name,types|
+          # TODO allow aliased name for output?
+          # e.g. types.class == Hash ? ...
+          [name, Hash[types.map {|t|
+            type = t
+            records = Resolver(name.to_s,
+                Net::DNS.const_get(type.upcase)
+              ).answer.map(&:value).
               find_all {|rec| not rec.nil?}.
               map { |rec| rec.split.last }
-            [k, {
-              n: records.count,
-              _info: {
-                records: records
-              },
-            }]
-          }]
+          [type.downcase, {
+            n: records.count,
+            _info: {
+              records: records
+            },
+          }]}]]
+        }]
       end
 
     end

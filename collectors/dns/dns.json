@@ -1,8 +1,7 @@
 {
   "hosts" : {
-    "root"   : ["sourcefire.com", "a"],
-    "www"    : ["www.sourcefire.com", "cname"],
-    "portal" : ["console.amp.sourcefire.com", "cname"],
-    "mail"   : ["sourcefire.com", "mx"]
+    "sourcefire.com"             : ["a", "mx"],
+    "www.sourcefire.com"         : ["cname"],
+    "console.amp.sourcefire.com" : ["cname"]
   }
 }
