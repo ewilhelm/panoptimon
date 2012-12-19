@@ -2,46 +2,37 @@ module Panoptimon
   module Collector
     class DNS
 
+      attr_accessor :options
+
       def initialize(options={})
-        @options = default.merge!(options)
+        @options = options
       end
 
-      def options
-        @options
-      end
-
-      def default
-        {'host' => 'www.google.com', 'type' => 'a'}
-      end
-
-      def type
-        types[options['type']]
-      end      
-
-      def types
-        {
-          'a'     => Net::DNS::A,
-          'mx'    => Net::DNS::MX,
-          'ns'    => Net::DNS::NS,
-          'ptr'   => Net::DNS::PTR,
-          'txt'   => Net::DNS::TXT,
-          'cname' => Net::DNS::CNAME
-        }
-      end
-
-      def host
-        options['host']
-      end
+      # a:     Net::DNS::A,
+      # mx:    Net::DNS::MX,
+      # ns:    Net::DNS::NS,
+      # ptr:   Net::DNS::PTR,
+      # txt:   Net::DNS::TXT,
+      # cname: Net::DNS::CNAME
 
       def query
-        output = []
-        response = Resolver(host, type).answer.each(&:value)
-        response.each do |record|
-          next if (record.nil? || record.value.nil?)
-          output << response.first.value.split.last           
-        end
-        output.empty? ? {:status => 1} : {:status => 0, :response => output}
+        Hash[
+          @options[:hosts].map {|k,v|
+            host = v[0]
+            # TODO include record type in output?
+            type = Net::DNS.const_get((v[1] || :a).upcase)
+            records = Resolver(host, type).answer.map(&:value).
+              find_all {|rec| not rec.nil?}.
+              map { |rec| rec.split.last }
+            [k, {
+              n: records.count,
+              _info: {
+                records: records
+              },
+            }]
+          }]
       end
+
     end
   end
 end

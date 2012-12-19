@@ -1,4 +1,8 @@
 {
-  "host": "gmail.com",
-  "type": "a"
+  "hosts" : {
+    "root"   : ["sourcefire.com", "a"],
+    "www"    : ["www.sourcefire.com", "cname"],
+    "portal" : ["console.amp.sourcefire.com", "cname"],
+    "mail"   : ["sourcefire.com", "mx"]
+  }
 }
