@@ -1,3 +1,4 @@
+class Array; def to_h; Hash[self]; end; end
 module Panoptimon
   module Collector
     class DNS
@@ -8,31 +9,31 @@ module Panoptimon
         @options = options
       end
 
-      # a:     Net::DNS::A,
-      # mx:    Net::DNS::MX,
-      # ns:    Net::DNS::NS,
-      # ptr:   Net::DNS::PTR,
-      # txt:   Net::DNS::TXT,
-      # cname: Net::DNS::CNAME
+      # types: a, mx, ns, ptr, txt, cname, any
 
       def query
-        Hash[@options[:hosts].map {|name,types|
-          # TODO allow aliased name for output?
-          # e.g. types.class == Hash ? ...
-          [name, Hash[types.map {|t|
-            type = t
-            records = Resolver(name.to_s,
-                Net::DNS.const_get(type.upcase)
-              ).answer.map(&:value).
-              find_all {|rec| not rec.nil?}.
-              map { |rec| rec.split.last }
-          [type.downcase, {
-            n: records.count,
-            _info: {
-              records: records
-            },
-          }]}]]
-        }]
+        hosts = @options[:hosts]
+        nslist = @options[:nameservers] || [nil]
+        nslist.map {|ns|
+          dns = ::Net::DNS::Resolver.new(
+            ns ? {nameservers: ns} : {})
+          [ns || 'default', hosts.map {|name,types|
+            # TODO allow aliased name for output?
+            # e.g. types.class == Hash ? ...
+            # collect results by type regardless of query
+            typed = Hash.new { |h,k|
+              h[k] = {n: 0, _info: {records: []}} }
+            types.each {|t|
+              dns.search(name.to_s, Net::DNS.const_get(t.upcase)).
+              answer.each { |rec|
+                stash = typed[rec.type.downcase]
+                stash[:n] += 1
+                stash[:_info][:records].push(rec.value)
+              }
+            }
+            [name, typed]
+          }.to_h]
+        }.to_h
       end
 
     end
