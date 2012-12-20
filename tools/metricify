@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+# translate json into panoptimon metrics-style json
+require "panoptimon"
+
+name = ARGV[0] || 'c'
+string = STDIN.readlines.join('')
+puts JSON.generate(Panoptimon::Metric.new(name, JSON.parse(string)))
