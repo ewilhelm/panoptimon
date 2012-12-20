@@ -1,10 +1,11 @@
 #! /usr/bin/env ruby
 
-$: << File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
+$LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 require 'rubygems'
 require 'json'
 require 'panoptimon-collector-nginx'
 
-client = Panoptimon::Collector::Nginx.new(JSON.parse(ARGV[0]))
+client = Panoptimon::Collector::Nginx.new(
+  ARGV[0] ? JSON.parse(ARGV[0], {symbolize_names: true}) : {})
 puts client.info.to_json
 
