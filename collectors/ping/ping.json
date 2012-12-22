@@ -1,0 +1,7 @@
+{
+  "hosts": [
+    "example.com",
+    {"host" : "localhost", "timeout" : 1, "count" : 1}
+  ]
+  ,"default_count" : 8
+}
