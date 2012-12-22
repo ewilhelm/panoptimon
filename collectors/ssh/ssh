@@ -1,10 +1,41 @@
 #! /usr/bin/env ruby
 
-$: << File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
 require 'json'
-require 'panoptimon-collector-ssh'
 
-client = Panoptimon::Collector::SSH.new(JSON.parse(ARGV[0]))
-puts client.info
+conf = ARGV[0] ? JSON.parse(ARGV[0], {symbolize_names: true}) : {}
+
+defaults = {
+  port:    conf[:default_port] || 22,
+  timeout: conf[:default_timeout] || 4,
+}
+
+conf[:hosts] or raise "hosts config required"
+
+setup = conf[:hosts].map {|h|
+  opt = h.is_a?(Hash) ? h : {host: h}
+  raise "host is required" unless opt[:host]
+  opt = defaults.merge(opt)
+  opt[:name] ||= opt[:host]
+  opt
+}
+
+require 'socket'
+require 'timeout'
+get = ->(args) {
+  warn args[:host]
+  data = {_info: {}}
+  begin
+    data[:_info][:banner] = timeout(args[:timeout]) {
+      TCPSocket.open(args[:host], args[:port]).readline
+    }.chomp
+    data[:ok] = true
+  rescue TimeoutError
+    data[:ok] = false
+  end
+  data
+}
+
+output = Hash[setup.map {|opt| [opt[:name], get[opt]]}]
+puts JSON.generate(output)
 
 
