@@ -7,55 +7,67 @@ module Panoptimon
   module Collector
     class HTTP
       
-      def initialize(uri)
+      attr_reader :uri, :use_ssl, :timeout, :match, :method
+      def initialize(uri, opt = {})
         @uri = URI(uri)
+        @use_ssl = @uri.scheme == 'https'
+        @timeout = opt[:timeout]
+        @match   = opt[:match] ? %r{#{opt[:match]}} : nil
+        @method  = opt[:method].downcase.to_sym
+        @method = :get if @method == :head and @match
       end
 
-      private
-      
-      def uri
-        @uri
-      end
-
-      def host
-        uri.host
-      end
-      
-      def port 
-        uri.port
-      end
-      
       def connect
-        @connect ||= ::Net::HTTP.new(uri.host, uri.port)
-        @connect.use_ssl = scheme
-        @connect
+        @connect ||= ::Net::HTTP.start(uri.host, uri.port,
+          :use_ssl      => use_ssl,
+          :open_timeout => timeout,
+          )
       end
-      
+
       def request
-        ::Net::HTTP::Get.new(uri.request_uri)
+        crass = {
+          head: ::Net::HTTP::Head,
+          get:  ::Net::HTTP::Get,
+        }[method]
+        raise "method #{method} not implemented" unless crass
+        crass.new(uri.request_uri)
       end
       
-      def response
-        connect.request(request)
+      def certificate_info (cert, now=Time.now)
+        return {
+          expires_in: (cert.not_after - now).round(0),
+          _info: {
+            issuer:  cert.issuer.to_s.match(%r{/O=([^/]+)})[1],
+            valid:   cert.not_before.to_s,
+            expires: cert.not_after.to_s,
+            serial:  sprintf('%032x', cert.serial).to_s.gsub(/(..)(?!$)/, '\1:'),
+          }
+        }
       end
 
-      def redirect
-        connect.is_a?(Net::HTTPRedirection)
-      end
-      
-      def scheme
-        uri.scheme == 'https' ?	true : false
-      end
+      def go
+        start = Time.now
+        response = begin; connect.request(request)
+          rescue Timeout::Error; nil ; end
 
-      public
-      
-      def certificate
-        @certificate ||= ::Panoptimon::Collector::SSLCertificate.new(uri)
-        @certificate.info
-      end      
+        ans = {
+          elapsed: (Time.now - start).round(6),
+        }
 
-      def status
-        scheme ? {:status => response.code}.merge!(certificate) : {:status => response.code}
+        return ans.merge({timeout: true}) unless response
+
+        ans.merge!({
+          content_length: response.header.content_length,
+          code:           response.code,
+        })
+        ans[:ssl] = certificate_info(connect.peer_cert) if use_ssl
+
+        ans[:ok] = response.body.match(match) ? true : false if match
+
+        (ans[:_info] ||= {})[:redirect] = response.header['Location'] \
+          if ans[:code].to_s.match(/^3/)
+
+        return ans
       end      
     end
   end

@@ -1,5 +1,5 @@
 #! /usr/bin/env ruby
-$: << File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
 
 require 'json'
 require 'socket'
@@ -7,9 +7,24 @@ require 'openssl'
 require 'net/http'
 require 'panoptimon-collector-http'
 
-options = JSON.parse(ARGV[0])
-uri     = options.fetch('host')
+ARGV[0] or raise "arguments required"
+conf = JSON.parse(ARGV[0], {symbolize_names: true})
 
-client = Panoptimon::Collector::HTTP.new(uri)
-puts JSON.generate(client.status)
+defaults = {
+  method:  conf[:default_method] || 'head',
+  timeout: conf[:default_timeout] || 3,
+}
+
+raise "must have 'urls' value in config" unless conf[:urls]
+setup = conf[:urls].map {|u|
+  o = defaults.merge(u.is_a?(Hash) ? u : {url: u})
+  o[:url] = 'http://' . o[:url] unless o[:url].match(%r{^\w+://})
+  o[:name] ||= o[:url].to_s
+  o
+}
+
+output = Hash[setup.map {|o|
+  [o[:name], Panoptimon::Collector::HTTP.new(o[:url], o).go]
+}]
+puts JSON.generate(output)
 
