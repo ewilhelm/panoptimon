@@ -1,0 +1,57 @@
+#! /usr/bin/env ruby
+
+require 'json'
+     
+conf = ARGV[0] ? JSON.parse(ARGV[0], {symbolize_names: true}) : {}
+
+bin_ping = [conf[:ping] || ['ping']].flatten
+
+defaults = {
+  timeout: conf[:default_timeout] || 4,
+  count:   conf[:default_count] || 2,
+}
+
+setup = Hash[conf[:hosts].map {|h|
+  (host, opt) = h.is_a?(Hash) ? [h[:host], h.tap{|x| x.delete(:host)}]
+    : [h, {}]
+  opt = defaults.merge(opt)
+  [host, opt]
+}]
+
+pings = Hash[setup.map {|host, opt|
+  args = ['-c', opt[:count], '-W', opt[:timeout]]
+  p = IO.popen((bin_ping + args + [host]).map {|e| e.to_s} +
+    [:err => [:child, :out]])
+  text = p.readlines.join('')
+  p.close
+  if not($?.success?) and not(text.match(%r{% packet loss}))
+    raise "runnaway ping" unless $?.exited? # never
+    next [host, { error: $?.exitstatus, tx: 0, rx: 0, loss: 1.0,
+      _info: {error: text.chomp}}]
+  end
+
+  matched = text.match(%r{
+    ^PING\ [^(]+\((?<resolved>[^)]+)\).*
+    ^(?<tx>\d+)\ packets\ transmitted,\s+
+     (?<rx>\d+)\ received,\s+
+     (?<loss>\d+)%\ packet\ loss,
+  }xm) or raise "sad bunny said #{text} - cannot parse"
+  result = Hash[ %w{tx rx loss}.map {|n| [n, matched[n].to_i]} ].
+    merge({ _info: { resolved: matched[:resolved], } })
+  result['loss'] /= 100.0
+
+  if matched = text.match(%r{
+      ^rtt\ min/avg/max/mdev\ =\s+
+      (?<rtt_min>\d*\.\d+)/
+      (?<rtt_avg>\d*\.\d+)/
+      (?<rtt_max>\d*\.\d+)/
+      (?<rtt_mdev>\d*\.\d+)\ ms
+    }xm)
+    result.merge!(Hash[ %w{rtt_min rtt_avg rtt_max rtt_mdev}.map {|n|
+      [n, matched[n].to_f]} ])
+  end
+  
+  [host, result]
+}]
+
+puts JSON.generate(pings)

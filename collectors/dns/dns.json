@@ -1,0 +1,7 @@
+{
+  "hosts" : {
+    "sourcefire.com"             : ["a", "mx"],
+    "www.sourcefire.com"         : ["cname"],
+    "console.amp.sourcefire.com" : ["cname"]
+  }
+}
