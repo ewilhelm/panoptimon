@@ -1,35 +1,28 @@
+require "socket"
+require "timeout"
+
 module Panoptimon
   module Collector
     class SMTP
 
-      def initialize(options={})
-        @options = options
+      attr_reader :host, :port, :timeout
+      def initialize(args={})
+        args.each { |k,v| instance_variable_set("@#{k}", v) }
       end
 
-      def options
-        @options
-      end
-
-      def host
-        options['host']
-      end
-
-      def port
-        options['port']
-      end
-      
-      def connect
-        begin
-          Timeout::timeout(5) do
-            TCPSocket.new(host, port)
-          end
+      def collect
+        c = begin
+          Timeout::timeout(timeout) {
+            code = TCPSocket.new(host, port).gets.split.first
+            {status: code.to_i}
+          }
         rescue Timeout::Error
-          false
+          {timeout: true}
+        rescue
+          {error: true, _info: {error: "#{$!.class}: #{$!}"}}
         end
-      end
-      
-      def banner
-        connect ? {:status => connect.gets.split.first} : nil
+
+        return c
       end
     end
   end

@@ -1,9 +1,27 @@
 #! /usr/bin/env ruby
-$: << File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
+
 require 'json'
-require 'socket'
-require 'timeout'
 require 'panoptimon-collector-smtp'
 
-client = Panoptimon::Collector::SMTP.new(JSON.parse(ARGV[0]))
-puts JSON.generate(client.banner)
+ARGV[0] or raise "arguments required"
+conf = JSON.parse(ARGV[0], {symbolize_names: true})
+
+defaults = {
+  port:    conf[:default_port] || 25,
+  timeout: conf[:default_timeout] || 3,
+}
+
+raise "must have 'hosts' value in config" unless conf[:hosts]
+setup = conf[:hosts].map {|h|
+  o = defaults.merge(h.is_a?(Hash) ? h : {host: h})
+  o[:host] or raise "must have 'host' attribute in entry #{o.inspect}"
+  o[:name] ||= o[:host]
+  o
+}
+
+output = Hash[setup.map {|o|
+  warn "o: #{o.inspect}"
+  [o[:name], Panoptimon::Collector::SMTP.new(o).collect]
+}]
+puts JSON.generate(output)

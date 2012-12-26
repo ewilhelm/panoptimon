@@ -1,4 +1,10 @@
 {
-  "host": "aspmx2.googlemail.com",
-  "port": "25"
+  "hosts": [
+    "aspmx2.googlemail.com",
+    {"host": "localhost", "port": "235"}
+  ],
+  "default_port" : 25,
+  "default_timeout" : 1,
+
+  "interval" : 240
 }
