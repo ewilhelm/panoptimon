@@ -2,9 +2,6 @@
 $LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
 
 require 'json'
-require 'socket'
-require 'openssl'
-require 'net/http'
 require 'panoptimon-collector-http'
 
 ARGV[0] or raise "arguments required"
