@@ -1,0 +1,10 @@
+{
+  "hosts": [
+    "smtp.gmail.com",
+    {"host": "localhost", "port": "235"}
+  ],
+  "default_port" : 587,
+  "default_timeout" : 7,
+
+  "interval" : 240
+}
