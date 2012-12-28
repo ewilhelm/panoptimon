@@ -32,6 +32,10 @@ def self.load_options (args)
     o = {}
     OptionParser.new do |opts|
 
+      opts.on('-C', '--config-dir DIR',
+        "Config directory (#{defaults[:config_dir]})"
+      ) { |v| o[:config_dir] = v }
+
       opts.on('-c', '--config-file FILENAME',
         "Alternative configuration file ",
         "(#{defaults[:config_file]})"
@@ -40,10 +44,6 @@ def self.load_options (args)
       opts.on('-D', '--[no-]foreground',
         "Don't daemonize (#{not defaults[:daemonize]})"
       ) { |v| o[:daemonize] = ! v }
-
-      opts.on('-C', '--config-dir DIR',
-        "Config directory (#{defaults[:config_dir]})"
-      ) { |v| o[:config_dir] = v }
 
       ['collectors', 'plugins'].each { |x|
         k = "#{x}_dir".to_sym
@@ -65,7 +65,7 @@ def self.load_options (args)
       }
 
       opts.on('--show WHAT',
-        %q{Show/validate settings for:  'config' / collector:foo / plugin:foo}
+        %q{Show/validate settings for:}, %q{  'config' / collector:foo / plugin:foo}
       ) { |x| (k,v) = x.split(/:/, 2)
         o[:show] = {k.to_sym => v||true}
       }

@@ -4,21 +4,36 @@ The All-Seeing System Monitor Daemon
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-    gem 'panoptimon'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
     $ gem install panoptimon
 
 ## Usage
 
-  panoptimon --help
+The `--config-dir` option will automatically set paths to configuration
+file, collectors, and plugins (and can be referred to as '%' as shown
+below.)
+
+    $ panoptimon --help
+    Usage: panoptimon [options]
+      -C, --config-dir DIR             Config directory (/etc/panoptimon/)
+      -c, --config-file FILENAME       Alternative configuration file 
+                                       (%/panoptimon.json)
+      -D, --[no-]foreground            Don't daemonize (false)
+          --collectors-dir DIR         Collectors directory (%/collectors)
+          --plugins-dir DIR            Plugins directory (%/plugins)
+          --list-collectors            list all collectors found
+          --list-plugins               list all plugins found
+      -o, --configure X=Y              Set configuration values
+          --show WHAT                  Show/validate settings for:
+                                         'config' / collector:foo / plugin:foo
+          --plugin-test FILE           Load and test plugin(s).
+      -d, --debug                      Enable debugging.
+          --verbose                    Enable verbose output
+      -v, --version                    Print version
+          --help-defaults              Show default config values
+      -h, --help                       Show this message
+
+See [the wiki](https://github.com/synthesist/panoptimon/wiki) for more
+info.
 
 ## Copyright and License
 
