@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'net/http'
+
+ARGV[0] or raise "arguments required"
+conf = JSON.parse(ARGV[0], {symbolize_names: true})
+
+defaults = {
+  timeout: conf[:default_timeout] || 3,
+}
+
+raise "must have 'collect' value in config" unless conf[:collect]
+setup = conf[:collect].map {|k,v|
+  o = defaults.merge(v.is_a?(Hash) ? v : {url: v})
+  o[:url] = URI( o[:url].match(%r{^\w+://}) ?
+    o[:url] : 'http://' . o[:url] )
+  o[:name] ||= k
+  o
+}
+
+go = ->(url, o){
+  response = begin; Timeout::timeout(o[:timeout]) {
+    r = ::Net::HTTP.start(url.host, url.port,
+      :use_ssl      => url.scheme == 'https',
+    ).request(::Net::HTTP::Get.new(url.request_uri)) }
+    JSON.parse(r.body, {sybolize_names: true})
+  rescue Timeout::Error; {timeout: true}; end
+}
+
+# TODO consider persistence / staggering
+setup.each {|o|
+  output = go[o[:url], o]
+  output[:_name] = o[:name]
+  puts JSON.generate(output)
+}
+
