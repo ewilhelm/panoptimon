@@ -1,0 +1,23 @@
+#! /usr/bin/env ruby
+#
+# == Panoptimon::Collector::HAProxy
+#
+# Collect HAProxy metrics leveraging the statistics socket provided by 
+# HAProxy. Input provided is expected to be JSON.
+
+$:.unshift File.expand_path('lib')
+require 'rubygems'
+require 'json'
+require 'panoptimon-collector-haproxy'
+
+# ensure input is provided or fail
+unless ARGV[0]
+  raise "Input must be specified for #{__FILE__}"
+  exit 1
+end
+
+config = JSON.parse(ARGV[0], :symbolize_names => true)
+client = Panoptimon::Collector::HAProxy.new(config)
+puts client.info.to_json
+
+
