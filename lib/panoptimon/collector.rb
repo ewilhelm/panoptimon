@@ -58,6 +58,7 @@ end
 class Metric < Hash
 
   def initialize (name, data)
+    name = data.delete('_name') if data['_name']
     self.merge!(_flatten_hash({}, name, data))
   end
 
