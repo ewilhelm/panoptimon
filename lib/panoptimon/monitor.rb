@@ -100,7 +100,8 @@ class Monitor
     rb   = conf.delete(:rb)
     setup = eval("->(name, config, monitor) {#{rb.open.read}\n}",
       empty_binding, rb.to_s, 1)
-    callback = setup.call(name, conf, self)
+    callback = begin; setup.call(name, conf, self)
+      rescue; raise "error loading plugin '#{name}' - #{$!}"; end
     logger.debug "plugin #{callback} - #{plugins[name]}"
     plugins[name] = callback unless callback.nil?
     loaded_plugins[name] = conf.clone # XXX need a plugin object?
