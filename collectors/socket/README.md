@@ -40,12 +40,12 @@ Unix supports:
 ### Check Attributes
 
 
-**Path: ** Describes the endpoint of a given socket.
+**Path:** Describes the endpoint of a given socket.
 
-**Timeout: ** Number of seconds to connect/query a given socket and return.
+**Timeout:** Number of seconds to connect/query a given socket and return.
 
-**Match: ** Parse the output ensuring it includes the given match string. 
+**Match:** Parse the output ensuring it includes the given match string. 
 
-**Query (TCP Only): ** Input to a given a socket.
+**Query (TCP Only):** Input to a given a socket.
 
-**Port (TCP Only): ** Port to connect to (default: 80). 
+**Port (TCP Only):** Port to connect to (default: 80). 
