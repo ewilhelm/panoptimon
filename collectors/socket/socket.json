@@ -1,0 +1,16 @@
+{
+  "checks": {
+    "reddit": {
+      "path": "/var/run/haproxy/stats",
+      "timeout": "10",
+      "query": "show info",
+      "match": ".*"
+    },
+    "cloudysunday": {
+      "path": "cloudysunday.com",
+      "port": "22",
+      "timeout": "5",
+      "match": "SSH"
+    }
+  }
+}
