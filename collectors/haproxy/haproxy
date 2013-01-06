@@ -4,7 +4,7 @@
 #
 # Collect HAProxy metrics.
 
-$LOAD_PATH.unshift File.expand_path('lib')
+$LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 
 require 'json'
 require 'panoptimon-collector-haproxy'
