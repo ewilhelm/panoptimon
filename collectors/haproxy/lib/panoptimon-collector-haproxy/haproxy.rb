@@ -4,13 +4,14 @@ module Panoptimon
   module Collector
     class HAProxy
 
-      attr_reader :collect
+      attr_reader :collector, :stats_url
 
       def initialize(options={})
         url = options[:stats_url] || '/var/run/haproxy.sock'
-        @collect = (url.sub!(%r{^socket:/}, '') or url !~ %r{^\w+://}) \
-          ? ->(){ self.class.stats_from_sock(url) }
-          : ->(){ self.class.stats_from_http(url) }
+        @stats_url = url.sub(%r{^socket:/}, '')
+        @collector = @stats_url !~ %r{^\w+://} \
+          ? :stats_from_sock
+          : :stats_from_http
       end
 
       def info
@@ -37,10 +38,12 @@ module Panoptimon
       end
 
       def self.stats_from_sock(path)
-        _parse_stats_csv(
-          sock_command(path, 'show stat').readlines)
-        self.class._parse_show_info(
-          self.class.sock_command(path, 'show info').readlines)
+        {
+          stats: _parse_stats_csv(
+            sock_command(path, 'show stat').readlines),
+          info: _parse_show_info(
+            sock_command(path, 'show info').readlines)
+        }
       end
 
       def self.stats_from_http(uri)

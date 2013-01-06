@@ -1,0 +1,21 @@
+Name: HAProxy
+Version: 1.4.22
+Release_date: 2012/08/09
+Nbproc: 1
+Process_num: 1
+Pid: 1656
+Uptime: 0d 9h31m50s
+Uptime_sec: 34310
+Memmax_MB: 0
+Ulimit-n: 8018
+Maxsock: 8018
+Maxconn: 4000
+Maxpipes: 0
+CurrConns: 1
+PipesUsed: 0
+PipesFree: 0
+Tasks: 6
+Run_queue: 1
+node: localhost.localdomain
+description: 
+
