@@ -1,30 +1,19 @@
-### Description
+# Description
 
-HAProxy provides a plethora of information via the statistics socket. The intent of this collector is to provide a check on all defined resources within HAProxy. 
+This collector provides a check on all defined resources within HAProxy. 
 
-### Requirements
+# Configuration
 
-* HAProxy
-* HAProxy statistics socket enabled
-* Ruby
-* RubyGems
+The `stats_url` can point at either the http: or socket: protocol
+(socket is assumed if the protocol is missing.)  Note that socket usage
+requires appropriate ownership/group permissions.
 
-### Configuration
-
-Currently only defining a socket is supported and is defined within the collector's JSON configuration file. 
-
-```
+```json
 {
-  "socket": "/var/run/haproxy/stats"
+  "stats_url": "socket://var/run/haproxy/stats"
+  # or http://localhost:8080
 }
 ```
 
-### Output
+# Output
 
-A JSON data structure is returned indication the status of your resources, if any resources are reported to be down a status code of "1" is returned. In addition several attributes assocated with your HAProxy installation are returned, including.
-
-* PID
-* Version
-* Uptime
-* Processes
-* Nbproc

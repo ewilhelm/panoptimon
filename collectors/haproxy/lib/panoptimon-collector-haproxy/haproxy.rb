@@ -1,60 +1,32 @@
+require 'panoptimon/util/string-with-as_number'
+
 module Panoptimon
   module Collector
     class HAProxy
 
-      attr_reader :options
+      attr_reader :collect
 
       def initialize(options={})
-        @options = options
-        @socket  = options['socket'] ||= '/var/run/haproxy.sock'
+        url = options[:stats_url] || '/var/run/haproxy.sock'
+        @collect = (url.sub!(%r{^socket:/}, '') or url !~ %r{^\w+://}) \
+          ? ->(){ self.class.stats_from_sock(url) }
+          : ->(){ self.class.stats_from_http(url) }
       end
 
       def info
-        {
-          :status => status,
-          :_info  => {
-            :backends  => backends,
-            :frontends => frontends, 
-            :servers   => servers,
-            :pid       => pid,
-            :version   => version, 
-            :uptime    => uptime,
-            :processes => processes,
-            :nbproc    => nbproc 
-          }
-        }
-      end
-
-      def frontends
-        stat('frontend')
-      end
-
-      def backends
-         stat('backend')
-      end
-
-      def servers
-        stat('server')
-      end
-
-      def pid
-        sys('pid')
-      end
-
-      def version
-        sys('version')
-      end
-
-      def uptime
-        sys('uptime_sec')       
-      end
-
-      def processes
-        sys('process_num')
-      end
-
-      def nbproc
-         sys('nbproc')
+        # stat: frontend,backend,server
+        # sys pid, version, uptime_sec, process_num, nbproc
+          # :status => status,
+          # :_info  => {
+          #   :backends  => backends,
+          #   :frontends => frontends, 
+          #   :servers   => servers,
+          #   :pid       => pid,
+          #   :version   => version, 
+          #   :uptime    => uptime,
+          #   :processes => processes, # process_num ?
+          #   :nbproc    => nbproc 
+          # }
       end
 
       # check if any frontends, backends, or servers are 'DOWN'
@@ -64,32 +36,42 @@ module Panoptimon
           servers.values].include?('DOWN') ? '0' : '1'
       end
 
-      # return information on the haproxy process
-      def sys(type)
-        output = ''
-        write('show info').each do |sys|
-          next unless sys.match(/^#{type}/i)
-          output += sys.split(':').last.strip
-        end
-        output
+      def self.stats_from_sock(path)
+        _parse_stats_csv(
+          sock_command(path, 'show stat').readlines)
+        self.class._parse_show_info(
+          self.class.sock_command(path, 'show info').readlines)
       end
 
-      # return information on frontends, backends, servers, and proxies.
-      def stat(type)
-        types  = {'frontend' => 1, 'backend' => 2, 'server' => 4}
-        output = {}
-        write("show stat -1 #{types[type]} -1").each  do |stat|
-          next if stat.match('^#')
-          stat        = stat.split(',')
-          key         = stat.first
-          output[key] = stat[17]
-        end
-        output
+      def self.stats_from_http(uri)
+      end
+
+      def self._parse_show_info(lines)
+        Hash[lines.map {|l|
+          (k,v) = * l.chomp.split(/:\s+/, 2);
+          k or next
+          [k.downcase.to_sym, v.as_number || v]}
+        ]
+      end
+
+      def self._parse_stats_csv(lines)
+        head = lines.shift.chomp.sub(/^# /, '') or raise "no header row?"
+        hk = head.split(/,/).map {|k| k.to_sym}; hk.shift(2)
+        imax = hk.length - 1
+        h = Hash.new {|hash,key| hash[key] = {}}
+        lines.each {|l| f = l.chomp.split(/,/)
+          (n,s) = f.shift(2)
+          h[s][n] = Hash[(0..imax).map {|i|
+            [hk[i], (f[i].nil? or f[i] == "") ? nil :
+              f[i].as_number || f[i]]}]
+        }
+        return h
       end
 
       # simple wrapper to communicate with the haproxy stat socket
-      def write(cmd)
-        stat_socket = UNIXSocket.new(options[:socket])
+      def self.sock_command(path, cmd)
+        require "socket"
+        stat_socket = UNIXSocket.new(path)
         stat_socket.puts(cmd)
         stat_socket
       end

@@ -1,0 +1,8 @@
+ruby -Icollectors/haproxy/lib -e 'require "json"; require "panoptimon-collector-haproxy";
+  puts Panoptimon::Collector::HAProxy._parse_stats_csv(
+    File.open("/tmp/haproxy-out2.csv").readlines).to_json'
+
+ruby -Icollectors/haproxy/lib -e 'require "json"; require "panoptimon-collector-haproxy";
+  puts Panoptimon::Collector::HAProxy._parse_show_info(
+    File.open("/tmp/haproxy-show-info.txt").readlines).to_json'
+
