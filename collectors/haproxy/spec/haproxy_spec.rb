@@ -5,11 +5,6 @@ require 'rspec'
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'panoptimon-collector-haproxy'
 
-class TXSocket; attr_reader :readlines
-  def puts (input); @readlines = @check[input]; end
-  def initialize (check) ; @check = check; end
-end
-
 describe('socket usage') {
   c = Panoptimon::Collector::HAProxy
   it('automatically assumes a socket') {
@@ -39,23 +34,14 @@ describe('socket usage') {
   it('connects and such') {
 
     plan = [
-      ['/fakely', ->(input) {
-        input.should == 'show stat'
-        File.open(
-          File.expand_path(__FILE__ + '-show_stat.csv')
-        ).readlines
-      }],
-      ['/fakely', ->(input) {
-        input.should == 'show info'
-        File.open(
-          File.expand_path(__FILE__ + '-show_info.txt')
-        ).readlines
-      }]
+      ['show stat', '-show_stat.csv'],
+      ['show info', '-show_info.txt'],
     ]
-    require 'socket'; UNIXSocket.stub(:new) {|name|
+    c.stub(:_sock_get) {|path, cmd|
       x = plan.shift
-      name.should == x[0]
-      TXSocket.new(x[1])
+      cmd.should == x[0]
+      File.open(File.expand_path(__FILE__ + x[1])).
+        readlines
     }
     # TODO refactor this to run through self.info or something
     info = c.stats_from_sock('/fakely')

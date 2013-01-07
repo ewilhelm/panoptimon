@@ -41,10 +41,8 @@ module Panoptimon
 
       def self.stats_from_sock(path)
         {
-          stats: _parse_stats_csv(
-            sock_command(path, 'show stat').readlines),
-          info: _parse_show_info(
-            sock_command(path, 'show info').readlines)
+          stats: _parse_stats_csv( _sock_get(path, 'show stat') ),
+          info:  _parse_show_info( _sock_get(path, 'show info') )
         }
       end
 
@@ -128,12 +126,11 @@ module Panoptimon
         return h
       end
 
-      # simple wrapper to communicate with the haproxy stat socket
-      def self.sock_command(path, cmd)
+      def self._sock_get(path, cmd)
         require "socket"
         stat_socket = UNIXSocket.new(path)
         stat_socket.puts(cmd)
-        stat_socket
+        stat_socket.readlines
       end
     end
   end
