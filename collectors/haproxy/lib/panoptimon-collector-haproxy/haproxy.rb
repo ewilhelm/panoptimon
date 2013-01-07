@@ -9,6 +9,7 @@ module Panoptimon
       def initialize(options={})
         url = options[:stats_url] || '/var/run/haproxy.sock'
         @stats_url = url.sub(%r{^socket:/}, '')
+        @stats_url += '/' if @stats_url =~ %r{^https?://[^/]+$}
         @collector = @stats_url !~ %r{^\w+://} \
           ? :stats_from_sock
           : :stats_from_http
@@ -49,6 +50,17 @@ module Panoptimon
       def self.stats_from_http(uri)
       end
 
+      def self._http_get(uri)
+        require 'net/http'
+        uri = URI(uri)
+        res = ::Net::HTTP.start(uri.host, uri.port,
+          :use_ssl => uri.scheme == 'https'
+        ).request(::Net::HTTP::Get.new(uri.request_uri))
+        raise "error: #{res.code} #{res.message}" unless
+          res.is_a?(::Net::HTTPSuccess)
+        return res.body
+      end
+
       def self._parse_show_info(lines)
         Hash[lines.map {|l|
           (k,v) = * l.chomp.split(/:\s+/, 2);
@@ -64,7 +76,7 @@ module Panoptimon
         h = Hash.new {|hash,key| hash[key] = {}}
         lines.each {|l| f = l.chomp.split(/,/)
           (n,s) = f.shift(2)
-          h[s][n] = Hash[(0..imax).map {|i|
+          h[s.to_sym][n] = Hash[(0..imax).map {|i|
             [hk[i], (f[i].nil? or f[i] == "") ? nil :
               f[i].as_number || f[i]]}]
         }

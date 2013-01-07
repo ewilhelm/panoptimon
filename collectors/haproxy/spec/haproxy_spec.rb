@@ -13,25 +13,25 @@ end
 describe('socket usage') {
   c = Panoptimon::Collector::HAProxy
   it('automatically assumes a socket') {
-    c.send(:new).tap {|me|
+    c.new().tap {|me|
       me.collector.should == :stats_from_sock
       me.stats_url.should == '/var/run/haproxy.sock'
     }
   }
   it('automatically assumes a socket (with argument)') {
-    c.send(:new, stats_url: "/var/lib/haproxy.sock").tap {|me|
+    c.new(stats_url: "/var/lib/haproxy.sock").tap {|me|
       me.collector.should == :stats_from_sock
       me.stats_url.should == '/var/lib/haproxy.sock'
     }
   }
   it('takes explicit socket:// too') {
-    c.send(:new, stats_url: "socket://var/lib/haproxy.sock").tap {|me|
+    c.new(stats_url: "socket://var/lib/haproxy.sock").tap {|me|
       me.collector.should == :stats_from_sock
       me.stats_url.should == '/var/lib/haproxy.sock'
     }
   }
   it('knows when you said otherwise') {
-    c.send(:new, stats_url: "sprocket://var/lib/haproxy.sock").tap {|me|
+    c.new(stats_url: "sprocket://var/lib/haproxy.sock").tap {|me|
       me.collector.should_not == :stats_from_sock
     }
   }
@@ -59,7 +59,34 @@ describe('socket usage') {
     }
     # TODO refactor this to run through self.info or something
     info = c.stats_from_sock('/fakely')
-    puts info.inspect
+    info[:stats][:BACKEND]['qrstuv'][:status].should == 'UP'
+    info[:info][:maxsock].should == 8018
+    info[:info][:maxsock].class.should == Fixnum
 
   }
+}
+
+describe('http usage') {
+  c = Panoptimon::Collector::HAProxy
+  it('recognizes url') {
+    c.new(stats_url: 'http://localhost:8080').tap {|me|
+      me.collector.should == :stats_from_http
+      me.stats_url.should == 'http://localhost:8080/'
+    }
+  }
+
+  it('recognizes https url') {
+    c.new(stats_url: 'https://localhost:8080').tap {|me|
+      me.collector.should == :stats_from_http
+      me.stats_url.should == 'https://localhost:8080/'
+    }
+  }
+
+  it('does not mangle path') {
+    c.new(stats_url: 'http://localhost:8080/bob').tap {|me|
+      me.collector.should == :stats_from_http
+      me.stats_url.should == 'http://localhost:8080/bob'
+    }
+  }
+
 }
