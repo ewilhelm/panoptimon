@@ -48,6 +48,7 @@ describe('socket usage') {
     info[:stats][:BACKEND]['qrstuv'][:status].should == 'UP'
     info[:info][:maxsock].should == 8018
     info[:info][:maxsock].class.should == Fixnum
+    info[:info][:tasks].should == 6
 
   }
 }
@@ -91,6 +92,7 @@ describe('http usage') {
     info[:stats][:BACKEND]['qrstuv'][:status].should == 'UP'
     info[:info][:maxsock].should == 8018
     info[:info][:maxsock].class.should == Fixnum
+    info[:info][:tasks].should == 17
   }
 
 }

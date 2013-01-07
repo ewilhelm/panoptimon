@@ -57,12 +57,10 @@ module Panoptimon
 
       def self._parse_html_info(body)
         body =~ %r{General\sprocess\sinformation</[^>]+>
-          (.*?)Running\stasks:\s(\d+)/(\d+)<}xm or
+          (.*?Running\stasks:\s\d+/\d+)<}xm or
           raise "body: #{body} does not match expectations"
         p = $1
-        info = {
-          run_queue: $2, # tasks: $3 ?
-        }
+        info = {}
         # TODO proper dishtml?
         p.gsub!(%r{\s+}, ' ')
         p.gsub!(%r{<br>}, "\n")
@@ -81,10 +79,13 @@ module Panoptimon
           currcons:      %r{current conns = (\d+)},
           pipesused:     %r{current pipes = (\d+)/\d+},
           pipesfree:     %r{current pipes = \d+/(\d+)},
+          run_queue:     %r{Running tasks: (\d+)/\d+},
+          tasks:         %r{Running tasks: \d+/(\d+)},
         }.each {|k,v|
           got = p.match(v) or raise "no match for #{k} (#{v})"
           info[k] = got[1].as_number || got[1]
         }
+        info[:memmax_mb] = 0 if info[:memmax_mb] == 'unlimited'
 
         vi = body.match(%r{<body>.*?>([^<]+)\ version\ (\d+\.\d+\.\d+),
           \ released\ (\d{4}/\d{2}/\d{2})}x) or
