@@ -6,3 +6,8 @@ ruby -Icollectors/haproxy/lib -e 'require "json"; require "panoptimon-collector-
   puts Panoptimon::Collector::HAProxy._parse_show_info(
     File.open("/tmp/haproxy-show-info.txt").readlines).to_json'
 
+ruby -Icollectors/haproxy/lib -e 'require "json"; require "panoptimon-collector-haproxy";
+  puts Panoptimon::Collector::HAProxy.stats_from_http("http://localhost:8099/")'
+
+ruby -Icollectors/haproxy/lib -e 'require "json"; require "panoptimon-collector-haproxy"; 
+  puts Panoptimon::Collector::HAProxy._parse_html_info(File.open("/tmp/haproxy-out.html").readlines.join("")).to_json'
