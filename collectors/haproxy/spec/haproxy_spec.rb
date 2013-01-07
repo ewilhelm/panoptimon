@@ -89,4 +89,22 @@ describe('http usage') {
     }
   }
 
+  it('connects and such') {
+    plan = [
+      ['http://localhost:8080/;csv', '-show_stat.csv'],
+      ['http://localhost:8080/', '-get.html'],
+    ]
+    c.stub(:_http_get) {|uri|
+      x = plan.shift
+      uri.should == x[0]
+      File.open(File.expand_path(__FILE__ + x[1])).
+        readlines.join('')
+    }
+
+    info = c.stats_from_http('http://localhost:8080/')
+    info[:stats][:BACKEND]['qrstuv'][:status].should == 'UP'
+    info[:info][:maxsock].should == 8018
+    info[:info][:maxsock].class.should == Fixnum
+  }
+
 }
