@@ -1,0 +1,16 @@
+#! /usr/bin/env ruby
+#
+# == Panoptimon::Collector::HAProxy
+#
+# Collect HAProxy metrics.
+
+$LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
+
+require 'json'
+require 'panoptimon-collector-haproxy'
+
+raise "Configuration required" unless ARGV[0]
+
+config = JSON.parse(ARGV[0], symbolize_names: true)
+client = Panoptimon::Collector::HAProxy.new(config)
+puts client.info.to_json
