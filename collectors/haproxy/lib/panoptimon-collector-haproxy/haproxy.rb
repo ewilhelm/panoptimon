@@ -1,5 +1,7 @@
 require 'panoptimon/util/string-with-as_number'
 
+class Array; def to_h; Hash[self]; end; end
+
 module Panoptimon
   module Collector
     class HAProxy
@@ -17,26 +19,35 @@ module Panoptimon
       end
 
       def info
-        # stat: frontend,backend,server
-        # sys pid, version, uptime_sec, process_num, nbproc
-          # :status => status,
-          # :_info  => {
-          #   :backends  => backends,
-          #   :frontends => frontends, 
-          #   :servers   => servers,
-          #   :pid       => pid,
-          #   :version   => version, 
-          #   :uptime    => uptime,
-          #   :processes => processes, # process_num ?
-          #   :nbproc    => nbproc 
-          # }
+        it = self.class.send(collector, stats_url)
+        out = {
+          uptime_sec: it[:info][:uptime_sec] ||
+            self.class._dhms_as_sec(it[:info][:uptime]),
+          status: it[:stats].values.reduce({}) {|c,v|
+            v.values.each {|h| s = h[:status].downcase.gsub(/ /, '_')
+              c[s] ||= 0; c[s] += 1 }
+            c
+          },
+          _info: {
+            status: [:FRONTEND, :BACKEND].map {|s|
+                [s, it[:stats][s].map {|n,v|
+                  [n, v[:status].downcase]}.to_h]
+            }.to_h,
+          }.merge([:version].
+            map {|k| [k, it[:info][k]]}.to_h),
+        }.merge(
+          [:process_num, :pid, :nbproc, :run_queue, :tasks].
+          map {|k| [k, it[:info][k]]}.to_h)
       end
 
-      # check if any frontends, backends, or servers are 'DOWN'
-      def status
-        [ frontends.values,
-          backends.values,
-          servers.values].include?('DOWN') ? '0' : '1'
+      def self._dhms_as_sec(dhms)
+        f = {'d' => 24*60**2, 'h' => 60**2, 'm' => 60, 's' => 1}
+        s = 0;
+        dhms.split(/(d|h|m|s) ?/).reverse.each_slice(2) {|p|
+          (k, v) = p
+          s += v.to_i * f[k]
+        }
+        return s
       end
 
       def self.stats_from_sock(path)

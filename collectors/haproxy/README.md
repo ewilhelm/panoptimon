@@ -17,3 +17,24 @@ requires appropriate ownership/group permissions.
 
 # Output
 
+```json
+{
+  "uptime_sec"      : ...,
+  "status|up"       : 13,
+  "status|down"     : 1,
+  "status|open"     : 6,
+  "status|no_check" : 4,
+  "process_num"     : 1,
+  "pid"             : 3720,
+  "nbproc"          : 3,
+  "run_queue"       : 1,
+  "tasks"           : 17,
+  "_info" : {
+    "version" : "1.4.22",
+    "status" : {
+      "FRONTEND" : {"x" : "open", "y" : "open", ...},
+      "BACKEND" : {"x" : "up", "y" : "down", ...
+    },
+  },
+}
+```
