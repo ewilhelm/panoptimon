@@ -3,22 +3,22 @@
 Connect to arbitrary TCP & UNIX sockets and match output. Input is expected to be an Array of TCP & UNIX checks as the following describes.
 
 
-```
-{                                                                                                                                      
-  "checks": {                                                                                                                          
-    "haproxy": {                                                                                                                        
-      "path": "/var/run/haproxy/stats",                                                                                                
-      "timeout": "10",                                                                                                              
-      "query": "show info",                                                                                                            
-      "match": ".*"                                                                                                                    
-    },                                                                                                                                 
-    "cloudysunday": {                                                                                                                  
-      "path": "cloudysunday.com",                                                                                                      
-      "port": "22",                                                                                                                    
-      "timeout": "5",                                                                                                                  
-      "match": "SSH"                                                                                                                   
-    }                                                                                                                                  
-  }                                                                                                                                    
+``` json
+{
+  "checks": {
+    "haproxy": {
+      "path": "/var/run/haproxy/stats",
+      "timeout": "10",
+      "query": "show info",
+      "match": ".*"
+    },
+    "cloudysunday": {
+      "path": "cloudysunday.com",
+      "port": "22",
+      "timeout": "5",
+      "match": "SSH"
+    }
+  }
 }
 ```
 
@@ -44,8 +44,8 @@ Unix supports:
 
 **Timeout:** Number of seconds to connect/query a given socket and return.
 
-**Match:** Parse the output ensuring it includes the given match string. 
+**Match:** Parse the output ensuring it includes the given match string.
 
 **Query (TCP Only):** Input to a given a socket.
 
-**Port (TCP Only):** Port to connect to (default: 80). 
+**Port (TCP Only):** Port to connect to (default: 80).
