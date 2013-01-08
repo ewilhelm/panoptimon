@@ -11,7 +11,7 @@ class TestPanoptimonCollectorSocketUnix < MiniTest::Unit::TestCase
   end
 
   def test_input_type
-	assert_instance_of String, @socket.path
+    assert_instance_of String, @socket.path
   end
 
   def test_valid_unix_path
@@ -19,6 +19,6 @@ class TestPanoptimonCollectorSocketUnix < MiniTest::Unit::TestCase
   end
 
   def test_valid_output
-	assert_instance_of Hash, @socket.run
+    assert_instance_of Hash, @socket.run
   end
 end
