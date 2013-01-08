@@ -1,0 +1,17 @@
+#! /usr/bin/env ruby
+
+$:.unshift File.expand_path('lib')
+require 'rubygems'
+require 'json'
+require 'panoptimon-collector-socket'
+
+unless ARGV[0]
+  raise 'Input must be provided!'
+  exit 1
+end
+
+config = JSON.parse(ARGV[0], :symbolize_names => true)
+config[:checks].each do |check, info|
+  client = (info[:path].match('^/') ? Panoptimon::Collector::Socket::Unix.new(info) : Panoptimon::Collector::Socket::TCP.new(info))
+  puts client.run
+end

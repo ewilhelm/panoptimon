@@ -1,0 +1,6 @@
+require 'uri'
+require 'socket'
+require 'timeout'
+require 'panoptimon-collector-socket/socket'
+require 'panoptimon-collector-socket/tcp'
+require 'panoptimon-collector-socket/unix'
