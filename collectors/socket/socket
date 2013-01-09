@@ -1,0 +1,13 @@
+#! /usr/bin/env ruby
+
+$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
+
+require 'json'
+require 'panoptimon-collector-socket'
+
+raise 'Input must be provided!' unless ARGV[0]
+
+config = JSON.parse(ARGV[0], symbolize_names: true)
+puts Hash[config[:checks].map do |check, info|
+  [check, Panoptimon::Collector::Socket.construct(info).run]
+end].to_json
