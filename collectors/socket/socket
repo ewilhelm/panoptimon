@@ -1,17 +1,13 @@
 #! /usr/bin/env ruby
 
-$:.unshift File.expand_path('lib')
-require 'rubygems'
+$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
+
 require 'json'
 require 'panoptimon-collector-socket'
 
-unless ARGV[0]
-  raise 'Input must be provided!'
-  exit 1
-end
+raise 'Input must be provided!' unless ARGV[0]
 
-config = JSON.parse(ARGV[0], :symbolize_names => true)
-config[:checks].each do |check, info|
-  client = (info[:path].match('^/') ? Panoptimon::Collector::Socket::Unix.new(info) : Panoptimon::Collector::Socket::TCP.new(info))
-  puts client.run
-end
+config = JSON.parse(ARGV[0], symbolize_names: true)
+puts Hash[config[:checks].map do |check, info|
+  [check, Panoptimon::Collector::Socket.construct(info).run]
+end].to_json

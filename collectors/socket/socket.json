@@ -1,15 +1,15 @@
 {
   "checks": {
-    "reddit": {
+    "haproxy": {
       "path": "/var/run/haproxy/stats",
-      "timeout": "10",
+      "timeout": 10,
       "query": "show info",
       "match": ".*"
     },
-    "cloudysunday": {
-      "path": "cloudysunday.com",
-      "port": "22",
-      "timeout": "5",
+    "ssh": {
+      "path": "localhost",
+      "port": 22,
+      "timeout": 5,
       "match": "SSH"
     }
   }

@@ -5,43 +5,23 @@ module Panoptimon
         attr_accessor :query
 
         def initialize(options={})
-          super(options)
-          @match = options[:match]
+          opt = super(defaults.merge(options))
+          @query = opt[:query]
+          opt
         end
 
         def defaults
-          { :path    => '/var/run/haproxy/stats',
-            :query   => 'show info',
-            :match   => '.*',
-            :timeout => 5
-          }
+          super.merge({
+            path:    '/var/run/haproxy/stats',
+            query:   'show info',
+            timeout: 5
+          })
         end
 
-        def socket
-          UNIXSocket.new(@path)
+        def get_banner
+          UNIXSocket.new(@path).puts(query).readlines.join('')
         end
 
-        def write(msg)
-          unix_sock = socket
-          socket.puts(msg)
-          socket
-        end
-
-        def output
-          @output ||= ''
-        end
-
-        def run
-          begin
-          Timeout::timeout(timeout.to_i) do
-              response = write(query)
-              response.each { |line| output += line.chomp }
-            end
-          rescue Timeout::Error
-            "Unable to connect to socket #{path}"
-          end
-          {:status => (output.match(/#{match}/i) ? 0 : 1 )}
-        end
       end
     end
   end

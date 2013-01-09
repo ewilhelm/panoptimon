@@ -1,3 +1,6 @@
+require 'panoptimon-collector-socket/tcp'
+require 'panoptimon-collector-socket/unix'
+
 module Panoptimon
   module Collector
     class Socket
@@ -7,11 +10,31 @@ module Panoptimon
         @path    = options[:path]    || defaults[:path]
         @match   = options[:match]   || defaults[:match]
         @timeout = options[:timeout] || defaults[:timeout]
+        return options
+      end
+
+      # dispatching constructor
+      def self.construct(options={})
+        (options[:path] =~ %r{^/} ? Unix : TCP).new(options)
       end
 
       def defaults
-        raise NotImplementedError, "#{self.class} cannot respond to:"
+        {match:   '.*'}
       end
+
+      def run
+        out = begin
+          {a: Timeout::timeout(timeout.to_i) { get_banner } }
+        rescue Timeout::Error
+          {timeout: true}
+        end
+
+        out[:status] = out.delete(:a).match(match) ? true : false \
+          if out[:a]
+
+        out
+      end
+
     end
   end
 end
