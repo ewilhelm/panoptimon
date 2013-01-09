@@ -18,4 +18,18 @@ describe('basic test') {
     yo.should == "foo\nbar\nbaz"
     ans[:status].should == true
   }
+  it('does matching too') {
+    socket = Panoptimon::Collector::Socket::Unix.new(
+      path:  '/tmp/sockpuppet',
+      query: 'show info',
+      match: 'frobnosticate',
+    )
+    socket.path.class.should == String
+    socket.path.should =~ %r{^/\w+}
+    socket.query.should == 'show info'
+
+    socket.stub(:get_banner) { "foo\nbar\nbaz" }
+    ans = socket.run
+    ans[:status].should == false
+  }
 }

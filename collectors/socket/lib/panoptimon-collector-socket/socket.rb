@@ -24,13 +24,11 @@ module Panoptimon
 
       def run
         out = begin
-          {a: Timeout::timeout(timeout.to_i) { get_banner } }
+          a = Timeout::timeout(timeout.to_i) { get_banner }
+          {status: a.match(match) ? true : false}
         rescue Timeout::Error
           {timeout: true}
         end
-
-        out[:status] = out.delete(:a).match(match) ? true : false \
-          if out[:a]
 
         out
       end
