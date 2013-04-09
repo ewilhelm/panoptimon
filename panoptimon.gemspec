@@ -21,8 +21,7 @@ Gem::Specification.new do |gem|
   # Core gem dependencies
   gem.add_dependency 'eventmachine', '~> 1.0.3'
   gem.add_dependency 'daemons', '~> 1.1.9'
-  gem.add_dependency 'json', '> 1.7'
-  gem.add_dependency 'logger', '> 1.2'
+  gem.add_dependency 'json'
   gem.add_dependency 'thin', '~> 1.5.1'
 
   # Plugin gem dependencies
