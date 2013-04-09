@@ -19,15 +19,15 @@ Gem::Specification.new do |gem|
   gem.version       = Panoptimon::VERSION
   gem.required_ruby_version = '>= 1.9'
   # Core gem dependencies
-  gem.add_dependency 'eventmachine', '~> 1.0.3'
-  gem.add_dependency 'daemons', '~> 1.1.9'
+  gem.add_dependency 'eventmachine', '~> 1.0.0'
+  gem.add_dependency 'daemons'
   gem.add_dependency 'json'
-  gem.add_dependency 'thin', '~> 1.5.1'
+  gem.add_dependency 'thin', '~> 1.5.0'
 
   # Plugin gem dependencies
-  gem.add_dependency 'riemann-client', '~> 0.2.1'
+  gem.add_dependency 'riemann-client'
 
   # Collector gem dependencies
-  gem.add_dependency 'sys-filesystem', '~> 1.1.0'
-  gem.add_dependency 'mysql', '~> 2.9.1'
+  gem.add_dependency 'sys-filesystem'
+  gem.add_dependency 'mysql'
 end
