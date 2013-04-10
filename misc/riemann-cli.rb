@@ -19,7 +19,7 @@ puts "Description: #{input_json['description']}"
 
 def submitEvent(event)
   # New Riemann client
-  c = Riemann::Client.new host: 'telemetry.dev1.immunet.com', port: 5555
+  c = Riemann::Client.new host: 'riemann.example.com', port: 5555
 
   # Send event to Riemann server
   c << {
