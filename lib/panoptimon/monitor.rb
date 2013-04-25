@@ -55,7 +55,6 @@ class Monitor
     command = file.dirname + collector_name + command unless command =~ /^\//
 
     command = _autodetect_collector_command_path(collector_name) unless File.exists?(command) # TODO - not happy with this.
-    raise "Could not find command for #{collector_name} collector" if command.nil?
 
     # TODO - interval/timeout defaults should be configurable
     return conf.
