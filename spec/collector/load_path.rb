@@ -10,10 +10,11 @@ describe "PATH search" do
     fakepath = @test_bin_dir + ":/should/not/exist/"
     ENV["PATH"] = fakepath
 
-    test_conf_dir = Pathname.new "/tmp/panoptimon/test_conf/"
-    FileUtils.mkdir_p test_conf_dir
+    @test_conf_dir = Pathname.new "/tmp/panoptimon/test_conf/"
+    FileUtils.mkdir_p @test_conf_dir
 
-    @test_conf_path = test_conf_dir + "thing.json"
+    @test_collector_name = "thing"
+    @test_conf_path = @test_conf_dir + "#{@test_collector_name}.json"
     f = File.new(@test_conf_path, "w")
     f.write('{"hey": "yo"}')
     f.close
