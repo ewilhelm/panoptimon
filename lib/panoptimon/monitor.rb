@@ -83,10 +83,12 @@ class Monitor
   def _init_collector (conf)
     name    = conf.delete(:name)
     command = conf.delete(:command)
+    full_cmd = [command.to_s] + conf[:args].to_a
+    logger.debug "#{name} command: #{full_cmd}"
     collector = Collector.new(
       name: name,
       bus: @bus,
-      command: [command.to_s] + conf[:args].to_a,
+      command: full_cmd,
       config: conf,
     )
     collectors << collector
