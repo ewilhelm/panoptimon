@@ -2,7 +2,6 @@
 
 require 'rspec'
 require 'panoptimon'
-require 'tempfile'
 
 describe "PATH search" do
   before(:each) do
