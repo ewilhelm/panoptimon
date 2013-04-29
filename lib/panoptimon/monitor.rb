@@ -54,6 +54,9 @@ class Monitor
     command = conf[:exec] ||= collector_name
     command = file.dirname + collector_name + command unless command =~ /^\//
 
+    command = _autodetect_collector_command_path(collector_name) unless File.exists?(command) # TODO - not happy with this.
+    raise "Could not find command for #{collector_name} collector" if command.nil?
+
     # TODO - interval/timeout defaults should be configurable
     return conf.
       merge({
@@ -62,6 +65,19 @@ class Monitor
         timeout:  (self.config.collector_timeout || 99).to_i
       }) {|k,a,b| a}.
       merge({command: command})
+  end
+
+  # Searches for 'pancollect-' executables in $PATH
+  # Returns nil if no command found
+  def _autodetect_collector_command_path(name)
+    pathdirs = ENV["PATH"].split(":")
+    name = 'pancollect-' + name
+    pathdirs.each{|basepath|
+      path = File.join(basepath, name)
+      logger.debug "checking path #{path}"
+      return path if File.exists?(path)
+    }
+    return nil
   end
 
   def _init_collector (conf)
