@@ -48,12 +48,16 @@ class Monitor
 
   def _load_collector_config (file)
     conf = JSON.parse(file.read, {:symbolize_names => true})
-    base = file.basename.sub(/\.json$/, '').to_s
-    command = conf[:exec] ||= base
-    command = file.dirname + base + command unless command =~ /^\//
+
+    # Determine the command path
+    collector_name = file.basename.sub(/\.json$/, '').to_s
+    command = conf[:exec] ||= collector_name
+    command = file.dirname + collector_name + command unless command =~ /^\//
+
+    # TODO - interval/timeout defaults should be configurable
     return conf.
       merge({
-        name: base,
+        name: collector_name,
         interval: (self.config.collector_interval || 99).to_i,
         timeout:  (self.config.collector_timeout || 99).to_i
       }) {|k,a,b| a}.
