@@ -51,8 +51,9 @@ class Monitor
 
     # Determine the command path
     collector_name = file.basename.sub(/\.json$/, '').to_s
-    command = conf[:exec] ||= collector_name
-    command = file.dirname + collector_name + command unless command =~ /^\//
+    command = Pathname.new(conf[:exec] || collector_name)
+    command = file.dirname + collector_name + command \
+      unless command.absolute?
 
     command = _autodetect_collector_command_path(collector_name) \
       unless command.exist?
