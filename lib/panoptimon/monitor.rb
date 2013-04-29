@@ -54,7 +54,8 @@ class Monitor
     command = conf[:exec] ||= collector_name
     command = file.dirname + collector_name + command unless command =~ /^\//
 
-    command = _autodetect_collector_command_path(collector_name) unless Pathname(command).exist?
+    command = _autodetect_collector_command_path(collector_name) \
+      unless command.exist?
 
     # TODO - interval/timeout defaults should be configurable
     return conf.
