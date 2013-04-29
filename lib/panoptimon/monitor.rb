@@ -56,7 +56,7 @@ class Monitor
       unless command.absolute?
 
     command = _autodetect_collector_command_path(collector_name) \
-      unless command.exist?
+      unless command.exist? || !conf[:exec].nil?
 
     # TODO - interval/timeout defaults should be configurable
     return conf.
