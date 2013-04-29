@@ -6,7 +6,7 @@ require 'tempfile'
 
 describe "PATH search" do
   before(:each) do
-    @test_bin_dir = "/tmp/panoptimon/testdir/"
+    @test_bin_dir = "/tmp/panoptimon/test_bin/"
     FileUtils.mkdir_p @test_bin_dir
     fakepath = @test_bin_dir + ":/should/not/exist/"
     ENV["PATH"] = fakepath
