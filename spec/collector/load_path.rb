@@ -42,6 +42,28 @@ describe "PATH search" do
     @monitor._load_collector_config(@test_conf_path).should include(:command => path)
   end
 
+  it "should not search PATH if exec is stipulated" do
+    path = File.join(@test_bin_dir, "pancollect-thing")
+    f = File.new(path, "w")
+    f.close
+
+    # Non-absolute exec path
+    f = File.new(@test_conf_path, 'w')
+    f.write('{"exec": "something_else"}')
+    f.close
+    non_abs_exec_path = @test_conf_dir.join(@test_collector_name, "something_else")
+
+    @monitor._load_collector_config(@test_conf_path).should include(:command => non_abs_exec_path)
+
+    # Absolute exec path
+    f = File.new(@test_conf_path, 'w')
+    exec_cmd = Pathname.new('/usr/bin/true')
+    f.write("{\"exec\": \"#{exec_cmd}\"}")
+    f.close
+
+    @monitor._load_collector_config(@test_conf_path).should include(:command => exec_cmd)
+  end
+
   after(:each) do
     FileUtils.rm_rf @test_bin_dir
     FileUtils.rm_rf @test_conf_path
