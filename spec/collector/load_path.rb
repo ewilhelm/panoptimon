@@ -6,9 +6,9 @@ require 'tempfile'
 
 describe "PATH search" do
   before(:each) do
-    @testdir = "/tmp/panoptimon/testdir/"
-    FileUtils.mkdir_p @testdir
-    fakepath = @testdir + ":/should/not/exist/"
+    @test_bin_dir = "/tmp/panoptimon/testdir/"
+    FileUtils.mkdir_p @test_bin_dir
+    fakepath = @test_bin_dir + ":/should/not/exist/"
     ENV["PATH"] = fakepath
 
     test_conf_dir = Pathname.new "/tmp/panoptimon/test_conf/"
@@ -34,7 +34,7 @@ describe "PATH search" do
   end
 
   it "should return a path if the command is found" do
-    path = File.join(@testdir, "pancollect-thing")
+    path = File.join(@test_bin_dir, "pancollect-thing")
     f = File.new(path, "w")
     f.close
     expect(@monitor._autodetect_collector_command_path("thing")).to eq(path)
@@ -43,7 +43,7 @@ describe "PATH search" do
   end
 
   after(:each) do
-    FileUtils.rm_rf @testdir
+    FileUtils.rm_rf @test_bin_dir
     FileUtils.rm_rf @test_conf_path
   end
 end
