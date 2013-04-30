@@ -20,14 +20,20 @@ class Monitor
     @bus = EM.spawn { |metric| me.bus_driver(metric) }
   end
 
+  # Search directories for JSON files
   def _dirjson (x)
     x = Pathname.new(x)
     x.entries.find_all {|f| f.to_s =~ /\.json$/i}.
       map {|f| x + f}
   end
 
-  def find_collectors; _dirjson(config.collectors_dir); end
-  def find_plugins;    _dirjson(config.plugins_dir);    end
+  def find_collectors
+    _dirjson(config.collectors_dir)
+  end
+
+  def find_plugins
+    _dirjson(config.plugins_dir)
+  end
 
   def load_collectors
     find_collectors.each {|f|
@@ -42,25 +48,48 @@ class Monitor
 
   def _load_collector_config (file)
     conf = JSON.parse(file.read, {:symbolize_names => true})
-    base = file.basename.sub(/\.json$/, '').to_s
-    command = conf[:exec] ||= base
-    command = file.dirname + base + command unless command =~ /^\//
+
+    # Determine the command path
+    collector_name = file.basename.sub(/\.json$/, '').to_s
+    command = Pathname.new(conf[:exec] || collector_name)
+    command = file.dirname + collector_name + command \
+      unless command.absolute?
+
+    command = _autodetect_collector_command_path(collector_name) \
+      unless command.exist? || !conf[:exec].nil?
+
+    # TODO - interval/timeout defaults should be configurable
     return conf.
       merge({
-        name: base,
+        name: collector_name,
         interval: (self.config.collector_interval || 99).to_i,
         timeout:  (self.config.collector_timeout || 99).to_i
       }) {|k,a,b| a}.
       merge({command: command})
   end
 
+  # Searches for 'pancollect-' executables in $PATH
+  # Returns nil if no command found
+  def _autodetect_collector_command_path(name)
+    pathdirs = ENV["PATH"].split(":")
+    name = 'pancollect-' + name
+    pathdirs.each{|basepath|
+      path = File.join(basepath, name)
+      logger.debug "checking path #{path}"
+      return path if File.exists?(path)
+    }
+    return nil
+  end
+
   def _init_collector (conf)
     name    = conf.delete(:name)
     command = conf.delete(:command)
+    full_cmd = [command.to_s] + conf[:args].to_a
+    logger.debug "#{name} command: #{full_cmd}"
     collector = Collector.new(
       name: name,
       bus: @bus,
-      command: [command.to_s] + conf[:args].to_a,
+      command: full_cmd,
       config: conf,
     )
     collectors << collector
