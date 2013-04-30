@@ -29,5 +29,4 @@ Gem::Specification.new do |gem|
 
   # Collector gem dependencies
   gem.add_dependency 'sys-filesystem'
-  gem.add_dependency 'mysql'
 end
