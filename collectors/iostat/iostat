@@ -16,7 +16,7 @@ p = IO.popen(cmd, 'r')
 
 puts '{}' # beep
 
-def prep l
+def parse_header l
   want = {
     'kb_read/s'  => 'rkB/s',
     'kb_write/s' => 'wkB/s',
@@ -33,8 +33,10 @@ def prep l
   }
   head = l.chomp.split(/\s+/)
   head = Hash[*head.zip(0..(head.length-1)).flatten]
-  raise "oops" unless head.values_at(*want.values).length == want.values.length
-  o = {}; want.each {|k,v| o[k] = head[v]}
+  want.values.find_all{|x| not(head[x])}.tap {|missed|
+    warn "missing headers: "+ missed.join(', ') if missed.length > 0
+  }
+  o = {}; want.each {|k,v| o[k] = head[v] if head[v]}
   return o
 end
 
@@ -43,7 +45,7 @@ group = {}
 
 until p.eof?
   l = p.readline("\n\n").split(/\n/)
-  omap ||= prep(l[0])
+  omap ||= parse_header(l[0])
   puts JSON::generate(Hash[*l.drop(1).map {|x|
     r = x.split(/\s+/)
     [r[0], # device name
