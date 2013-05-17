@@ -1,3 +1,10 @@
+# 0.3.0
+
+* plugins/graphite/ - added
+* collectors/iostat/ - allow missing headers
+* `monitor.http.hostport()` logged on init
+* `panoptimon --plugin-test` with .rb file
+
 # 0.2.0
 
 Removed the mysql_status collector from core to reduce gem dependencies.
