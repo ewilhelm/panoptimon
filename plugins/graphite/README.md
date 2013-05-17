@@ -5,6 +5,18 @@ This plugin emits metrics to Graphite.
 # Supported Platforms
 
 * Linux
+* *others untested*
+
+# Metric Names
+
+The panoptimon field separator is '|', but graphite uses '.' or '/'.
+The metric names emitted by this plugin will be rewritten to use '.'
+as a field separator, and any existing '.' or '/' characters are
+replaced with '_'.  This *could* cause a conflict with some metrics,
+but is rather unlikely.
+
+    example: disk|/dev/sda3|space_used
+    becomes: disk._dev_sda3.space_used
 
 # Configuration
 
