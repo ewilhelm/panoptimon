@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'socket'
 
 hostname = Socket.gethostname.sub(/\..*/, '')
