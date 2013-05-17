@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'socket'
 
-hostname = `hostname -s`.chomp!
+hostname = Socket.gethostname.sub(/\..*/, '')
 
 host   = config[:host]   || 'localhost'
 port   = config[:port]   || '2003'
