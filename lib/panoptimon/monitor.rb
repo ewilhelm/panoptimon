@@ -100,6 +100,8 @@ class Monitor
     # TODO rescue LoadError => nicer error message
     require 'panoptimon/http'
     @http = HTTP.new
+    logger.warn "Serving http on #{@http.hostport}"
+    @http
   end
 
   def empty_binding; binding; end
