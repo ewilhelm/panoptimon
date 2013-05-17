@@ -109,6 +109,10 @@ if opts.daemonize
   Daemons.daemonize(
     app_name: Pathname.new($0).basename.to_s,
     log_output: true)
+  trap('HUP') {
+    monitor.logger.warn 'Hangup...'
+    monitor.stop
+  }
 end
 
 # TODO maybe split config loading / init across daemonize for better
@@ -119,5 +123,7 @@ monitor.load_collectors
 EM.run {
   monitor.run
 }
+
+monitor.logger.warn 'Bye.'
 
 # vim:ts=2:sw=2:et:sta
