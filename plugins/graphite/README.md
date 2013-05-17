@@ -8,6 +8,16 @@ This plugin emits metrics to Graphite.
 
 # Configuration
 
+### graphite.json example
+
+````
+{
+  "host": "graphite.example.com",
+  "port": 2003,
+  "prefix": "env.location.foo"
+}
+````
+
 ## Host
 
 The name or IP of your Graphite server
