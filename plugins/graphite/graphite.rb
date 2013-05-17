@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'socket'
 
 hostname = ->(;h){->(i){
