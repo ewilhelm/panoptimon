@@ -61,8 +61,13 @@ end
 
 if opts.plugin_test
 
+  # allow either json (as-installed) or rb name + json on command-line
   opts.plugin_test.each do |p|
-    monitor._init_plugin(monitor._load_plugin_config(Pathname.new(p)))
+    p = Pathname.new(p)
+    c = p.to_s =~ /\.rb$/ ? JSON.parse(ARGV.shift).
+        merge({name: p.basename.to_s, base: p.dirname, rb: p})
+      : monitor._load_plugin_config(p)
+    monitor._init_plugin(c)
   end
 
   module MetricReader
