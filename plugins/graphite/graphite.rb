@@ -1,15 +1,13 @@
-# TODO Make the stats string more configurable. Replace "hostname" with an
-#      option passed in from upstream somewhere.
-
 require 'rubygems'
 require 'socket'
 
+hostname = `hostname -s`.chomp!
+
 host = config[:host] || 'localhost'
 port = config[:port] || '2003'
+path = config[:path] || hostname
 
 socket = TCPSocket.open(host, port)
-
-hostname = `hostname -s`.chomp!
 
 ->(metrics) {
   t = Time.now.to_i
@@ -25,7 +23,7 @@ hostname = `hostname -s`.chomp!
     # Replace pan's default "|" delim with "." so Graphite groups properly.
     metric.gsub!(/\|/, '.')
 
-    stat = "#{hostname}.#{metric} #{metrics[k]} #{t}"
+    stat = "#{path}.#{metric} #{metrics[k]} #{t}"
     socket.write("#{stat}\n")
   }
 }
