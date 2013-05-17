@@ -18,6 +18,10 @@ class HTTP
     @http.backend.start
   end
 
+  def hostport
+    "#{@http.host}:#{@http.port}"
+  end
+
   def call (env)
     path = env['PATH_INFO']
     return favicon(env) if path == '/favicon.ico'
