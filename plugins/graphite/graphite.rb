@@ -3,9 +3,9 @@ require 'socket'
 
 hostname = `hostname -s`.chomp!
 
-host = config[:host] || 'localhost'
-port = config[:port] || '2003'
-path = config[:path] || hostname
+host   = config[:host]   || 'localhost'
+port   = config[:port]   || '2003'
+prefix = config[:prefix] || hostname
 
 socket = TCPSocket.open(host, port)
 
@@ -23,7 +23,7 @@ socket = TCPSocket.open(host, port)
     # Replace pan's default "|" delim with "." so Graphite groups properly.
     metric.gsub!(/\|/, '.')
 
-    stat = "#{path}.#{metric} #{metrics[k]} #{t}"
+    stat = "#{prefix}.#{metric} #{metrics[k]} #{t}"
     socket.write("#{stat}\n")
   }
 }
