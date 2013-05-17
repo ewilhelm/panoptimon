@@ -1,0 +1,39 @@
+# Graphite Plugin
+
+This plugin emits metrics to Graphite.
+
+# Supported Platforms
+
+* Linux
+
+# Configuration
+
+## Host
+
+The name or IP of your Graphite server
+
+Default: localhost
+
+## Port
+
+The port carbon is listening on.
+
+Default: 2003
+
+## Prefix
+
+The name to prefix to the path panoptimon streams to Graphite. For instance, if
+you set `prefix` to `qa.san-jose.app1`, the full CPU idle path Graphite
+receives will be:
+
+`qa.san-jose.app1.$hostname.cpu.idle`
+
+Modifying this prefix allows you to customize how metrics are organized in
+Graphite.
+
+Default: `hostname -s`
+
+## Known Issues
+
+The default `prefix` makes the plugin non-portable. On other UNIX `hostname -s`
+might set the hostname to... `-s`. This is a TODO for Solarish support.)
