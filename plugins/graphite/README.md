@@ -18,36 +18,27 @@ This plugin emits metrics to Graphite.
 }
 ````
 
-## host
+## `host`
 
 The name or IP of your Graphite server
 
-Default: localhost
+Default: `localhost`
 
-## port
+## `port`
 
 The port carbon is listening on.
 
-Default: 2003
+Default: `2003`
 
-## prefix
+## `prefix`
 
-The name to prefix to the path panoptimon streams to Graphite. For instance, if
-you set `prefix` to `qa.san-jose.app1`, the full CPU idle path Graphite
-receives will be:
+The prefix to the path streamed to Graphite. For instance, if you set
+`prefix` to `qa.san-jose.app1`, the full CPU idle path Graphite receives
+will be `qa.san-jose.app1.cpu.idle`.  This allows you to customize how
+metrics are organized in Graphite.
 
-`qa.san-jose.app1.cpu.idle`
+Default: `<%= host %>`
 
-Modifying this prefix allows you to customize how metrics are organized in
-Graphite.
-
-If you override the prefix, you will need to set `hostname` yourself if
-desired. This allows you to place the hostname wherever in the path you want as
-well.
-
-Default: `hostname -s`
-
-## Known Issues
-
-The default `prefix` makes the plugin non-portable. On other UNIX `hostname -s`
-might set the hostname to... `-s`. This is a TODO for Solarish support.)
+The erb-like strings `<%= host %>` and `<%= domain %>` will be replaced
+(respectively) with the first and remaining dot-separated parts of your
+host name.
