@@ -18,19 +18,19 @@ This plugin emits metrics to Graphite.
 }
 ````
 
-## Host
+## host
 
 The name or IP of your Graphite server
 
 Default: localhost
 
-## Port
+## port
 
 The port carbon is listening on.
 
 Default: 2003
 
-## Prefix
+## prefix
 
 The name to prefix to the path panoptimon streams to Graphite. For instance, if
 you set `prefix` to `qa.san-jose.app1`, the full CPU idle path Graphite
