@@ -1,11 +1,19 @@
 require 'rubygems'
 require 'socket'
 
-hostname = `hostname -s`.chomp!
+hostname = ->(;h){->(i){
+  unless h
+    a, b = Socket.gethostname.split(/\./, 2)
+    h = {host: a, domain: b}
+  end
+  h[i.to_sym]
+}}[]
 
 host   = config[:host]   || 'localhost'
 port   = config[:port]   || '2003'
-prefix = config[:prefix] || hostname
+prefix = config[:prefix] || '<%= host %>'
+
+prefix.gsub!(/<%= *(host|domain) *%>/) { hostname[$1] }
 
 socket = TCPSocket.open(host, port)
 
