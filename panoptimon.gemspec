@@ -26,7 +26,4 @@ Gem::Specification.new do |gem|
 
   # Plugin gem dependencies
   gem.add_dependency 'riemann-client'
-
-  # Collector gem dependencies
-  gem.add_dependency 'sys-filesystem'
 end
