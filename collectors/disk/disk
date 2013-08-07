@@ -13,7 +13,7 @@ def GB b; (b.to_f / 1024**3).round(6); end # GB significant down to 4kB
 def get_mounts
   mount_hash = {}
   mounts = File.open("/etc/mtab", "r").read.split("\n").map{|l| l.split(/\s+/)}
-  mounts.map{|m| mount_hash[m[0]] = m[1] unless %w[devpts udev sysfs tmpfs none proc].include?(m[0])}
+  mounts.each{|m| mount_hash[m[0]] = m[1] unless %w[devpts udev sysfs tmpfs none proc].include?(m[0])}
   mount_hash
 end
 
