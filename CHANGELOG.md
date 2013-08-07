@@ -1,3 +1,7 @@
+# 0.4.0
+
+* collectors/disk - remove sys-filesystem dependency
+
 # 0.3.0
 
 * plugins/graphite/ - added
