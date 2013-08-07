@@ -18,11 +18,10 @@ def get_mounts
 end
 
 def stat_fs (mounts)
-  o = []
   s = %x[stat --printf="%n %s %b %f %a %c %d\n" -f #{mounts.keys.join(' ')}].split("\n")
   s.map!{|l| l.split}
-  s.each{|l|
-    o << OpenStruct.new(
+  s.map{|l|
+    OpenStruct.new(
       name: mounts[l[0]],
       block_size: l[1].to_i,
       blocks: l[2].to_i,
@@ -32,7 +31,6 @@ def stat_fs (mounts)
       files_available: l[6].to_i
     ).freeze
   }
-  o
 end
 
 while(true) do
