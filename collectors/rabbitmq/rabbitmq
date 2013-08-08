@@ -1,0 +1,57 @@
+#!/usr/bin/env ruby
+require 'net/http'
+require 'uri'
+require 'json'
+
+class FireampRabbitmq
+  def initialize(config)
+    @metrics = {}
+    @cfg = {}
+    @cfg[:username] = config["rmq_monitor_user"]
+    @cfg[:password] = config["rmq_monitor_pwd"]
+    @cfg[:port]     = config["rmq_port"].to_i
+    @cfg[:host]     = config["rmq_host"]
+  end
+
+  def overview
+  	if @cfg[:username].nil? || @cfg[:password].nil?
+  	   @cfg[:port].nil?     || @cfg[:host].nil?	
+  	   @metrics = JSON::generate({:error => "Bad Config"})
+  	   return
+  	end
+
+    url      = URI.parse("http://#{@cfg[:host]}/api/overview")
+    url.port = @cfg[:port] 
+    req      = Net::HTTP::Get.new(url.path)
+    req.basic_auth @cfg[:username], @cfg[:password]
+
+    begin
+      resp = Net::HTTP.new(url.host, url.port).start {|http| http.request(req) }
+    rescue => msg
+      @metrics = JSON::generate({:error => "Could not connect"})
+      return
+    end
+
+    if resp.code != "200"
+      if resp.nil?
+      	@metrics = JSON::generate({:error => "Nil response object"})
+        return
+      else
+        @metrics = JSON::generate({:error => "Bad status #{resp.code}"})
+        return 
+      end
+    end
+
+    #If we hit this then the resp should already be JSON
+    @metrics = resp.body
+  end
+
+  def metrics
+    overview
+    @metrics
+  end
+end
+
+config = JSON::parse(ARGV[0])
+rmq    = FireampRabbitmq.new(config)
+puts rmq.metrics
