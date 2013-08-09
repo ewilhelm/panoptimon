@@ -1,0 +1,6 @@
+{
+	"username": "bobsmith",
+	"password": "12345",
+	"host": "localhost",
+	"port": "55672"
+}

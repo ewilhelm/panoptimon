@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+require 'net/http'
+require 'uri'
+require 'json'
+
+def overview (username, password, host, port)
+  url = URI.parse("http://#{host}:#{port}/api/overview")
+  req = Net::HTTP::Get.new(url.path)
+  req.basic_auth username, password
+
+  begin
+    resp = Net::HTTP.new(url.host, url.port).start {|http| http.request(req) }
+  rescue => msg
+    error "Could not connect - #{msg}"
+  end
+
+  if resp.code != "200"
+    if resp.nil?
+      error "Nil response object"
+    else
+      error "Bad status #{resp.code}"
+    end
+  elsif resp['content-type'] != 'application/json'
+    error "Not getting JSON output from RabbitMQ API"
+  end
+
+  j = JSON::parse(resp.body)
+  j.select{|k,v| %w[object_totals queue_totals].include?(k) }
+end
+
+def error message
+  puts JSON::generate({:error => message})
+  exit 1
+end
+
+config = JSON::parse(ARGV[0])
+if config["username"].nil? || config["password"].nil?
+  error "Missing username/password"
+end
+config["host"] ||= 'localhost'
+config["port"] ||= '55672'
+
+puts JSON::generate(overview(config["username"], config["password"], config["host"], config["port"]))
