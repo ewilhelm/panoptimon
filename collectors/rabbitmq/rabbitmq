@@ -20,10 +20,12 @@ def overview (username, password, host, port)
     else
       error "Bad status #{resp.code}"
     end
+  elsif resp['content-type'] != 'application/json'
+    error "Not getting JSON output from RabbitMQ API"
   end
 
-  #If we hit this then the resp should already be JSON
-  resp.body
+  j = JSON::parse(resp.body)
+  j.select{|k,v| %w[object_totals queue_totals].include?(k) }
 end
 
 def error message
@@ -38,4 +40,4 @@ end
 config["host"] ||= 'localhost'
 config["port"] ||= '55672'
 
-puts overview(config["username"], config["password"], config["host"], config["port"])
+puts JSON::generate(overview(config["username"], config["password"], config["host"], config["port"]))
