@@ -1,3 +1,7 @@
+# 0.4.1
+
+* collectors/rabbitmq - add RabbitMQ collector
+
 # 0.4.0
 
 * collectors/disk - remove sys-filesystem dependency
