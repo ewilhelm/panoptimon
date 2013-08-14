@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+require 'net/http'
+require 'uri'
+require 'json'
+
+def overview (host, port)
+  url = URI.parse("http://#{host}:#{port}/_status")
+  req = Net::HTTP::Get.new(url.path)
+
+  begin
+    resp = Net::HTTP.new(url.host, url.port).start {|http| http.request(req) }
+  rescue => msg
+    error "Could not connect - #{msg}"
+  end
+
+  if resp.code != "200"
+    if resp.nil?
+      error "Nil response object"
+    else
+      error "Bad status #{resp.code}"
+    end
+  elsif not resp['content-type'].include? 'application/json'
+    error "Not getting JSON output from MongoDB"
+  end
+
+  j = JSON::parse(resp.body)
+  j['serverStatus']
+end
+
+def error message
+  puts JSON::generate({:error => message})
+  exit 1
+end
+
+config = JSON::parse(ARGV[0])
+config["host"] ||= 'localhost'
+config["port"] ||= '28017'
+
+puts JSON::generate(overview(config["host"], config["port"]))
