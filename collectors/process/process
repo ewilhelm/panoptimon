@@ -9,6 +9,8 @@ pgrep = ['pgrep']
 
 checks = opt[:checks]
 
+# pgrep each check to gather pids, then ps those pids to get info
+
 # could match a process with more than one check, so keep track
 names = Hash.new {|h,k| h[k] = []}
 found = {}
@@ -20,8 +22,11 @@ checks.each {|n,o|
   raise "must have some process characteristic for #{n}" \
     unless args.length > 0
   cmd = pgrep + ['-d,'] + args
+  warn "#{n} => #{cmd}" if opt[:debug]
   got = begin; IO.popen(cmd).readline.chomp.split(/,/); rescue; []; end
+  got.reject! {|pid| pid.to_i == $$} # don't find myself
   got.each {|pid| names[pid].push(n)}
+  warn "#{n} => #{got.inspect}" if opt[:debug]
   found[n] = {count: got.length}
 }
 
@@ -36,7 +41,7 @@ cnv = {}.tap {|it|
     h ||= 0
     d.to_i * 24 * 60**2 + h.to_i * 60**2 + m.to_i * 60 + s.to_i}
   it.merge!({
-    pcpu: to_f, time: to_sec, etime: to_sec,
+    pcpu: to_f, time: to_sec, etime: to_sec, pid: to_i,
     thcount: to_i, pri: to_i, rss: to_i, ni: to_i, vsz: to_i
   })
 }
@@ -45,7 +50,7 @@ IO.popen(ps + ['-ww', '-o', fields.join(','), '-p', names.keys.join(',')]).
   readlines.drop(1).each {|l|
     f = l.chomp.sub(/^\s+/, '').split(/\s+/, fieldcount)
     h = (0..fieldcount-1).map {|i| [fields[i].to_sym, f[i]]}.to_h
-    pid = h.delete(:pid)
+    pid = h[:pid]
     inf = %w(command).map {|k| [k, h.delete(k.to_sym)]}.to_h
     cnv.each {|k,v| h[k] = v[h[k]]}
     names[pid].each {|n|
