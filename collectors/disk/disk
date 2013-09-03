@@ -41,7 +41,7 @@ while(true) do
       space_used: GB((s.blocks - s.blocks_free) * s.block_size),
       space_free: GB(s.blocks_available         * s.block_size),
       space_priv: GB((s.blocks_free - s.blocks_available) * s.block_size),
-      space_used_percentage: ((s.blocks - s.blocks_free) * 100.0 / s.blocks).round(2),
+      space_used_percentage: ((s.blocks - s.blocks_free) * 100.0 / (s.blocks - s.blocks_free + s.blocks_available)).round(2),
       files_used: s.files - s.files_available,
       files_free: s.files_available,
     }]
