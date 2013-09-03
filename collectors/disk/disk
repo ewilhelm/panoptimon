@@ -26,7 +26,7 @@ def stat_fs (mounts)
       block_size: l[1].to_i,
       blocks: l[2].to_i,
       blocks_free: l[3].to_i,
-      blocks_available: l[4].to_i,
+      blocks_available: l[4].to_i, #blocks available to non-superuser
       files: l[5].to_i,
       files_available: l[6].to_i
     ).freeze
@@ -41,6 +41,7 @@ while(true) do
       space_used: GB((s.blocks - s.blocks_free) * s.block_size),
       space_free: GB(s.blocks_available         * s.block_size),
       space_priv: GB((s.blocks_free - s.blocks_available) * s.block_size),
+      space_used_percentage: (((s.blocks - s.blocks_free) * 100).to_f / s.blocks).round(2),
       files_used: s.files - s.files_available,
       files_free: s.files_available,
     }]
