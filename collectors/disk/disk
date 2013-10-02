@@ -35,7 +35,7 @@ end
 
 while(true) do
   mounts = get_mounts
-  stats = stat_fs(mounts)
+  stats = stat_fs(mounts).select{|m| m.blocks > 0}
   info = stats.map{ |s|
     [s.name, {
       space_used: GB((s.blocks - s.blocks_free) * s.block_size),
