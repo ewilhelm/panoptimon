@@ -19,4 +19,8 @@ describe('flatten a metric') {
         'whatever' => ['deep structure', 'blah', {'blah' => 'blah'}]
       }}
   }
+  it('returns empty hash when there is no metrics') {
+    Panoptimon::Metric.new('blanks', {}).
+      should == {}
+  }
 }
