@@ -8,8 +8,13 @@ opt = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 1}
 p = IO.popen([*%w{vmstat}, opt['interval'].to_s], 'r')
 p.readline # scrap
 optional = {stolen: 'st'}
-want = {user: 'us', system: 'sy', idle: 'id', wait: 'wa'}.
-  merge(optional)
+if RUBY_PLATFORM.downcase.include?("linux")
+  want = {user: 'us', system: 'sy', idle: 'id', wait: 'wa'}.
+    merge(optional)
+else
+  want = {user: 'us', system: 'sy', idle: 'id'}.
+    merge(optional)
+end
 
 # index the header
 head = p.readline.chomp.sub(/^\s+/, '').split(/\s+/)
