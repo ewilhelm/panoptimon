@@ -5,7 +5,7 @@ $stdout.sync = true # persistent process
 require 'json'
 opt = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 1}
 
-p = IO.popen([*%w{vmstat -n }, opt['interval'].to_s], 'r')
+p = IO.popen([*%w{vmstat}, opt['interval'].to_s], 'r')
 p.readline # scrap
 optional = {stolen: 'st'}
 want = {user: 'us', system: 'sy', idle: 'id', wait: 'wa'}.
