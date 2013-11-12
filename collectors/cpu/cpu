@@ -5,16 +5,11 @@ $stdout.sync = true # persistent process
 require 'json'
 opt = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 1}
 
+# TODO skip header line in parsing. (Whenever the header line is printed, pan
+# will emit a {}.)
 p = IO.popen([*%w{vmstat}, opt['interval'].to_s], 'r')
 p.readline # scrap
-optional = {stolen: 'st'}
-if RUBY_PLATFORM.downcase.include?("linux")
-  want = {user: 'us', system: 'sy', idle: 'id', wait: 'wa'}.
-    merge(optional)
-else
-  want = {user: 'us', system: 'sy', idle: 'id'}.
-    merge(optional)
-end
+optional = {stolen: 'st', wait: 'wa'}
 
 # index the header
 head = p.readline.chomp.sub(/^\s+/, '').split(/\s+/)
