@@ -4,7 +4,7 @@ require 'json'
 require 'rubygems'
 require 'ostruct'
 
-config = JSON::parse(ARGV[0])
+config = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 60}
 
 $stdout.sync = true
 
