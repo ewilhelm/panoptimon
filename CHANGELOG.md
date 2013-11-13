@@ -1,3 +1,6 @@
+# 0.4.9
+
+* collectors/cpu - portable vmstat, skip wait if missing
 
 # 0.4.8
 
