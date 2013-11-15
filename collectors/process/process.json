@@ -1,6 +1,7 @@
 {
   "checks" : {
-    "sshd" : { "full" : "^/usr/sbin/sshd" },
+    "sshd" : { "full" : "^/usr/sbin/sshd( |$)" },
+    "duck" : {"full" : "/usr/bin/duck"},
     "root shells" : { "pattern" : "^(ba)?sh", "user" : "root" },
     "daemons" : { "user" : "daemon,nobody,www-data" }
   }

@@ -1,3 +1,8 @@
+
+# 0.4.8
+
+* collectors/process - include pid metric, fix spuriously reporting self
+
 # 0.4.1
 
 * collectors/rabbitmq - add RabbitMQ collector

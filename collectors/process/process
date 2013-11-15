@@ -9,6 +9,8 @@ pgrep = ['pgrep']
 
 checks = opt[:checks]
 
+# pgrep each check to gather pids, then ps those pids to get info
+
 # could match a process with more than one check, so keep track
 names = Hash.new {|h,k| h[k] = []}
 found = {}
@@ -20,8 +22,11 @@ checks.each {|n,o|
   raise "must have some process characteristic for #{n}" \
     unless args.length > 0
   cmd = pgrep + ['-d,'] + args
+  warn "#{n} => #{cmd}" if opt[:debug]
   got = begin; IO.popen(cmd).readline.chomp.split(/,/); rescue; []; end
+  got.reject! {|pid| pid.to_i == $$} # don't find myself
   got.each {|pid| names[pid].push(n)}
+  warn "#{n} => #{got.inspect}" if opt[:debug]
   found[n] = {count: got.length}
 }
 
@@ -29,30 +34,33 @@ ps = ['ps']
 fields = %w(pid time etime thcount pcpu ni pri vsz rss command)
 fieldcount = fields.length
 
-cnv = {}.tap {|it|
+convert = ->(){
   to_i = ->(x) {x.to_i}; to_f = ->(x) {x.to_f};
   to_sec = ->(x) { d = 0; d = $1 if x.sub!(/^\d+-/, '');
     (h,h,m,s) = x.match(/^(?:(\d+):)?(\d+):(\d+)/).to_a
     h ||= 0
     d.to_i * 24 * 60**2 + h.to_i * 60**2 + m.to_i * 60 + s.to_i}
-  it.merge!({
-    pcpu: to_f, time: to_sec, etime: to_sec,
+  {
+    pcpu: to_f, time: to_sec, etime: to_sec, pid: to_i,
     thcount: to_i, pri: to_i, rss: to_i, ni: to_i, vsz: to_i
-  })
-}
+  }
+}[]
 
+# ps gives us one row per pid => collect into `found` hash
 IO.popen(ps + ['-ww', '-o', fields.join(','), '-p', names.keys.join(',')]).
   readlines.drop(1).each {|l|
-    f = l.chomp.sub(/^\s+/, '').split(/\s+/, fieldcount)
-    h = (0..fieldcount-1).map {|i| [fields[i].to_sym, f[i]]}.to_h
-    pid = h.delete(:pid)
-    inf = %w(command).map {|k| [k, h.delete(k.to_sym)]}.to_h
-    cnv.each {|k,v| h[k] = v[h[k]]}
+    row = ->(){
+      f = l.chomp.sub(/^\s+/, '').split(/\s+/, fieldcount)
+      (0..fieldcount-1).map {|i| [fields[i].to_sym, f[i]]}.to_h
+    }[]
+    pid = row[:pid]
+    info = %w(command).map {|k| [k, row.delete(k.to_sym)]}.to_h
+    convert.each {|k,func| row[k] = func.call(row[k])}
     names[pid].each {|n|
       i = found[n][:i] ||= 0; found[n][:i] += 1
-      found[n][i] = h
+      found[n][i] = row
       _info = found[n][:_info] ||= Hash.new {|h,k| h[k] = []}
-      inf.each {|k,v| _info[k].push(v)}
+      info.each {|k,v| _info[k].push(v)}
     }
   } if names.keys.length > 0
 
