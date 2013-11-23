@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+require 'panoptimon/util'
+
 require 'json'
 class Array; def to_h; Hash[self]; end; end
 
@@ -31,7 +33,11 @@ checks.each {|n,o|
 }
 
 ps = ['ps']
-fields = %w(pid time etime thcount pcpu ni pri vsz rss command)
+fields = %w(pid time etime pcpu nice pri vsz rss args)
+
+# TODO discover whether our ps supports it -- and do that efficiently?
+fields.push('thcount') if Panoptimon::Util.os == :linux
+
 fieldcount = fields.length
 
 convert = ->(){
@@ -42,7 +48,7 @@ convert = ->(){
     d.to_i * 24 * 60**2 + h.to_i * 60**2 + m.to_i * 60 + s.to_i}
   {
     pcpu: to_f, time: to_sec, etime: to_sec, pid: to_i,
-    thcount: to_i, pri: to_i, rss: to_i, ni: to_i, vsz: to_i
+    thcount: to_i, pri: to_i, rss: to_i, nice: to_i, vsz: to_i
   }
 }[]
 
@@ -55,8 +61,10 @@ IO.popen(ps + ['-o', fields.join(','), '-p', names.keys.join(',')]) {
       (0..fieldcount-1).map {|i| [fields[i].to_sym, f[i]]}.to_h
     }[]
     pid = row[:pid]
+    row[:command] = row.delete(:args)
     info = %w(command).map {|k| [k, row.delete(k.to_sym)]}.to_h
-    convert.each {|k,func| row[k] = func.call(row[k])}
+    convert.each {|k,func|
+      row[k] = func.call(row[k]) if row.include?(k)}
     names[pid].each {|n|
       i = found[n][:i] ||= 0; found[n][:i] += 1
       found[n][i] = row
