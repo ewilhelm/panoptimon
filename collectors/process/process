@@ -47,8 +47,9 @@ convert = ->(){
 }[]
 
 # ps gives us one row per pid => collect into `found` hash
-IO.popen(ps + ['-ww', '-o', fields.join(','), '-p', names.keys.join(',')]).
-  readlines.drop(1).each {|l|
+IO.popen(ps + ['-o', fields.join(','), '-p', names.keys.join(',')]) {
+  |io| io.readlines
+}.drop(1).each {|l|
     row = ->(){
       f = l.chomp.sub(/^\s+/, '').split(/\s+/, fieldcount)
       (0..fieldcount-1).map {|i| [fields[i].to_sym, f[i]]}.to_h
@@ -63,6 +64,7 @@ IO.popen(ps + ['-ww', '-o', fields.join(','), '-p', names.keys.join(',')]).
       info.each {|k,v| _info[k].push(v)}
     }
   } if names.keys.length > 0
+exit $?.exitstatus unless $?.success?
 
 found.each {|k,v| v.delete(:i)} # cleanup
 
