@@ -2,6 +2,7 @@
 
 require 'json'
 require 'panoptimon/util'
+
 Panoptimon::Util.os(
   linux: ->(){
     head = [
@@ -15,12 +16,14 @@ Panoptimon::Util.os(
       'rx multicast',
       'tx bytes',
       'tx packets',
-      'tx drops',
+      'tx errs',
+      'tx drop',
       'tx fifo',
       'tx colls',
       'tx carrier',
       'tx compressed'
     ]
+    # TODO delete some of these that aren't available on other OS?
 
     class Array; def to_h ; Hash[*self.flatten]; end; end
 
