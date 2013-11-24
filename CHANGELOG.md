@@ -1,3 +1,8 @@
+# 0.4.10
+
+* collectors/process - portability, rename ni -> nice, skip thcount
+  except on linux
+
 # 0.4.9
 
 * collectors/cpu - portable vmstat, skip wait if missing
