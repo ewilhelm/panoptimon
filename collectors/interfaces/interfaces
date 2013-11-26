@@ -43,4 +43,30 @@ Panoptimon::Util.os(
       sleep(opt[:interval] || 5)
     end
   },
+  default: ->() {
+    hmap = {
+      'Ipkts'  => 'rx packets',
+      'Ierrs'  => 'rx errs',
+      'Opkts'  => 'tx packets',
+      'Oerrs'  => 'tx errs',
+      'Collis' => 'tx colls',
+    }
+    IO.popen(['netstat', '-in']) {|fh|
+      header = fh.gets.split(/\s+/)
+      raise "unexpected - #{header}" unless header[0] == 'Name'
+      header = (0..(header.length - 1)).map {|i| [header[i], i]}.to_h
+
+      data = {}
+      while(line = fh.gets) do
+        break if line == "\n" # TODO parse/handle ipv6 outputs
+        row = line.split(/\s+/)
+        iface = row[header['Name']]
+        data[iface] = hmap.keys.map {|k| [hmap[k], row[header[k]]]}.to_h
+      end
+
+      puts JSON::generate(data)
+    }
+    exit $?.exitstatus unless $?.success?
+
+  },
 );
