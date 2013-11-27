@@ -1,3 +1,7 @@
+# 0.4.11
+
+* collectors/interfaces - portability: parsing netstat for data
+
 # 0.4.10
 
 * collectors/process - portability, rename ni -> nice, skip thcount

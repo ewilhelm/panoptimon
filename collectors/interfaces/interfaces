@@ -2,32 +2,71 @@
 
 require 'json'
 require 'panoptimon/util'
-Panoptimon::Util.os(linux: true)
 
-head = [
-  'rx bytes',
-  'rx packets',
-  'rx errs',
-  'rx drop',
-  'rx fifo',
-  'rx frame',
-  'rx compressed',
-  'rx multicast',
-  'tx bytes',
-  'tx packets',
-  'tx drops',
-  'tx fifo',
-  'tx colls',
-  'tx carrier',
-  'tx compressed'
-]
+opt = ARGV[0].nil? ? {interval: 1}
+  : JSON::parse(ARGV[0], {symbolize_names: true})
+
+$stdout.sync = true # persistent process
 
 class Array; def to_h ; Hash[*self.flatten]; end; end
 
-state = File.read('/proc/net/dev').
-  split("\n").drop(2).map {|l|
-    (iface, row) = *l.sub(/^\s+/, '').split(/:\s+/, 2)
-    [iface, head.zip(row.split(/\s+/)).to_h]
-  }.to_h
+Panoptimon::Util.os(
+  linux: ->(){
+    head = [
+      'rx bytes',
+      'rx packets',
+      'rx errs',
+      'rx drop',
+      'rx fifo',
+      'rx frame',
+      'rx compressed',
+      'rx multicast',
+      'tx bytes',
+      'tx packets',
+      'tx errs',
+      'tx drop',
+      'tx fifo',
+      'tx colls',
+      'tx carrier',
+      'tx compressed'
+    ]
+    # TODO delete some of these that aren't available on other OS?
 
-puts JSON::generate(state)
+    while(1) do 
+      state = File.read('/proc/net/dev').
+        split("\n").drop(2).map {|l|
+          (iface, row) = *l.sub(/^\s+/, '').split(/:\s+/, 2)
+          [iface, head.zip(row.split(/\s+/)).to_h]
+        }.to_h
+
+      puts JSON::generate(state)
+      sleep(opt[:interval] || 5)
+    end
+  },
+  default: ->() {
+    hmap = {
+      'Ipkts'  => 'rx packets',
+      'Ierrs'  => 'rx errs',
+      'Opkts'  => 'tx packets',
+      'Oerrs'  => 'tx errs',
+      'Collis' => 'tx colls',
+    }
+    IO.popen(['netstat', '-in']) {|fh|
+      header = fh.gets.split(/\s+/)
+      raise "unexpected - #{header}" unless header[0] == 'Name'
+      header = (0..(header.length - 1)).map {|i| [header[i], i]}.to_h
+
+      data = {}
+      while(line = fh.gets) do
+        break if line == "\n" # TODO parse/handle ipv6 outputs
+        row = line.split(/\s+/)
+        iface = row[header['Name']]
+        data[iface] = hmap.keys.map {|k| [hmap[k], row[header[k]]]}.to_h
+      end
+
+      puts JSON::generate(data)
+    }
+    exit $?.exitstatus unless $?.success?
+
+  },
+);
