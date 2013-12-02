@@ -123,7 +123,19 @@ end
 def run (opt)
   p = opt[:paths] or raise "'paths' argument required!"
 
-  puts JSON.generate(Hash[p.map {|k,v| [k, report(k,v)]}])
+  res = Hash[p.map {|k,v| [k, report(k,v)]}]
+
+  if opt[:relativized_mtime] # TODO implement CEP plugin and not this
+    res.each_value {|list|
+      next unless list['']
+      list[''].each_value {|h|
+        warn h.inspect
+        h['last_modified'] = Time.now.to_i - h['mtime']
+      }
+    }
+  end
+
+  puts JSON.generate(res)
 end
 
 run(JSON::parse(ARGV[0], {symbolize_names: true})) if __FILE__ == $0

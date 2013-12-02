@@ -1,6 +1,15 @@
+# Description
+
+Find and report on files matching various conditions.  With the
+`no_list` option, only report the number of files found.  Otherwise
+report all of the `stat` data for each file matched.
+
+# Configuration
+
 ```json
 
 {
+  "relativized_mtime" : true,   // report epoch - mtime (deprecated feature)
   "paths" : {
     "/tmp" : {},                // implicit name+path, just count everything + report
     "/tmp swapfiles" : {        // names must be unique

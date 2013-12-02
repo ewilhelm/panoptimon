@@ -1,3 +1,7 @@
+# 0.4.12
+
+* collectors/files - `relativized_mtime` option to report `last_modified`
+
 # 0.4.11
 
 * collectors/interfaces - portability: parsing netstat for data
