@@ -14,6 +14,10 @@ module Panoptimon
       os = _os
       return os unless dispatch.length > 0
 
+      # experimental - skip detection and use specified name
+      os = dispatch['-option'][:os_override].to_sym if
+        dispatch['-option'] and dispatch['-option'][:os_override]
+
       it = dispatch[os] || dispatch[:default] or
         raise "unsupported OS: #{os}"
       return it.is_a?(Proc) ? it.call() : it
