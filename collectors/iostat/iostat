@@ -12,7 +12,7 @@ if opt['interval']
 end
 p = IO.popen(cmd, 'r')
 
-[1,2].each { x = p.readline until x == "\n" } # header + first sample
+2.times { x = p.readline until x == "\n" } # header + first sample
 
 puts '{}' # beep
 
