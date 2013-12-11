@@ -1,15 +1,41 @@
 #!/usr/bin/env ruby
 
 require 'json'
-l = File.new('/proc/loadavg').read.split(/\s+/)
-(j,n) = l[3].split('/')
+require 'panoptimon/util'
 
-# TODO support for systems with no /proc
+opt = ARGV[0].nil? ? {}
+  : JSON::parse(ARGV[0], {symbolize_names: true})
 
-puts JSON::generate({
-  avg_1:  l[0].to_f,
-  avg_5:  l[1].to_f,
-  avg_15: l[2].to_f,
-  jobs:   j.to_i,
-  n:      n.to_i})
+data = Panoptimon::Util.os(
+  '-option' => opt,
+  linux: ->() {
+    l = File.new('/proc/loadavg').read.split(/\s+/)
+    (j,n) = l[3].split('/')
 
+    return {
+      avg_1:  l[0].to_f,
+      avg_5:  l[1].to_f,
+      avg_15: l[2].to_f,
+      jobs:   j.to_i,
+      n:      n.to_i
+    }
+  },
+  default: ->() {
+    line = IO.popen('uptime') {|io| io.readline.chomp }
+    exit $?.exitstatus unless $?.success?
+
+    l = line.match(/average:
+      \s*([\d\.]+),
+      \s*([\d\.]+),
+      \s*([\d\.]+)/ix).to_a
+    
+    return {
+      avg_1:  l[1].to_f,
+      avg_5:  l[2].to_f,
+      avg_15: l[3].to_f,
+    }
+  },
+)
+
+
+puts JSON::generate(data)

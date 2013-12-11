@@ -1,3 +1,7 @@
+# 0.4.13
+
+* collectors/load - portability: parsing `uptime`
+
 # 0.4.12
 
 * collectors/files - `relativized_mtime` option to report `last_modified`
