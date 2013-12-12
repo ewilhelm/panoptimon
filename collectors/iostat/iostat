@@ -124,7 +124,8 @@ module Panoptimon
       end
       class OS_openbsd < Panoptimon::Collector::IOStat
         # default output format, -w required
-        # TODO def cmd -- will need -w before count
+        # TODO reimplement cmd -- will need -w before count
+        # TODO reimplement run -- parsing column-wise
       end
     end
   end
