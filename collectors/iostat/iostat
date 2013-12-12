@@ -16,7 +16,7 @@ module Panoptimon
 
         if opt[:interval]
           cmd.push(opt[:interval].to_s)
-          cmd.push(opt[:count].to_s) if opt[:count]
+          cmd.push(opt[:count].to_s) if opt[:count] # just for debugging
         end
 
         return cmd
@@ -34,19 +34,26 @@ module Panoptimon
 
       def run
         p = IO.popen(cmd, 'r')
-
-        2.times { x = p.readline until x == "\n" } # header + first sample
+        if p.eof?
+          raise $?;
+        end
+        cue(p)
 
         puts '{}' # beep
 
         omap = nil
+        device_idx = nil
 
         until p.eof?
-          l = p.readline("\n\n").split(/\n/)
+          l = getlines(p)
+
+          # TODO something less sprawled
           omap ||= parse_header(l[0])
+          device_idx ||= omap.delete(:device)
+
           puts JSON::generate(Hash[*l.drop(1).map {|x|
             r = x.split(/\s+/)
-            [r[0], # device name
+            [r[device_idx],
               Hash[*omap.keys.map {|k| [k, r[omap[k]].to_f]}.flatten]]
           }.flatten])
 
@@ -54,10 +61,18 @@ module Panoptimon
       end
       
       class OS_linux < Panoptimon::Collector::IOStat
-        # -xd
         def flags; '-xd' ; end
+
+        def cue (p)
+          2.times { x = p.readline until x == "\n" } # header + first sample
+        end
+
+        def getlines (p)
+          p.readline("\n\n").split(/\n/)
+        end
+
         def want
-          {
+          { device: 'Device:',
             'kb_read/s'  => 'rkB/s',
             'kb_write/s' => 'wkB/s',
             'rrqm/s'     => 'rrqm/s',
@@ -76,10 +91,40 @@ module Panoptimon
       end
       class OS_freebsd < Panoptimon::Collector::IOStat::OS_linux; end  
       class OS_solaris < Panoptimon::Collector::IOStat
-        # -xne
+        def flags; '-xne' ; end
+
+        def cue (p)
+          2.times { x = p.readline until x =~ /^\s*extended / }
+        end
+
+        def getlines (p)
+          lines = []
+          while line = p.gets
+            return lines if line =~ /^\s* extended /
+            lines << line.chomp
+          end
+          # eof?
+          return lines
+        end
+
+        def want
+          { device: 'device',
+            'kb_read/s'  => 'kr/s',
+            'kb_write/s' => 'kw/s',
+            'reads/s'    => 'r/s',
+            'writes/s'   => 'w/s',
+            'wait'       => 'wait',
+            'wsvc_t'     => 'wsvc_t',
+            'asvc_t'     => 'asvc_t',
+            'pct_wait'   => '%w',
+            'pct_busy'   => '%b',
+            'errors'     => 'tot',
+          }
+        end
       end
       class OS_openbsd < Panoptimon::Collector::IOStat
         # default output format, -w required
+        # TODO def cmd -- will need -w before count
       end
     end
   end
