@@ -1,5 +1,5 @@
 # Copyright (C) 2012 Sourcefire, Inc.
 
 module Panoptimon
-  VERSION = "0.4.13"
+  VERSION = "0.4.14"
 end

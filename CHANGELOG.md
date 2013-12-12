@@ -1,3 +1,7 @@
+# 0.4.14
+
+* collectors/iostat - portability: parsing solaris output
+
 # 0.4.13
 
 * collectors/load - portability: parsing `uptime`
