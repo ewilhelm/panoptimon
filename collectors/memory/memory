@@ -8,6 +8,10 @@ $stdout.sync = true
 
 def GB b; (b.to_f / 1024**2).round(6); end # GB significant down to 4kB
 
+require 'panoptimon/util'
+
+Panoptimon::Util.os(
+  linux: ->(){
     while(true) do
 
       info = File.readlines('/proc/meminfo').map {|l|
@@ -31,3 +35,5 @@ def GB b; (b.to_f / 1024**2).round(6); end # GB significant down to 4kB
       break unless config.include?('interval')
       sleep config['interval']
     end
+  },
+)
