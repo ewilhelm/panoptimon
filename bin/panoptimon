@@ -108,7 +108,16 @@ if opts.daemonize
   # but this has support for redirecting io to logfiles... worth it?
   Daemons.daemonize(
     app_name: Pathname.new($0).basename.to_s,
-    log_output: true)
+    log_output: true,
+  )
+
+  # TODO fancier method of reloading config?  Note that we only need to
+  # trap HUP when using daemonize (which ignores it before forking.)
+  # NOTE said fancy method would require major refactor of this file.
+  trap('HUP') {
+    monitor.logger.warn 'Hangup...'
+    monitor.stop
+  }
 end
 
 # TODO maybe split config loading / init across daemonize for better
@@ -119,5 +128,7 @@ monitor.load_collectors
 EM.run {
   monitor.run
 }
+
+monitor.logger.warn 'Bye.'
 
 # vim:ts=2:sw=2:et:sta

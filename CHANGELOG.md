@@ -1,3 +1,7 @@
+# 0.4.16
+
+* hangup - disable distant signal traps/ignores
+
 # 0.4.15
 
 * collectors/iostat - compat for older (v9.x) sysstat
