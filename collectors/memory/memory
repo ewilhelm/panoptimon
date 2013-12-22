@@ -7,6 +7,7 @@ config = ARGV[0] ? JSON::parse(ARGV[0]) : {}
 $stdout.sync = true
 
 def GB b; (b.to_f / 1024**2).round(6); end # GB significant down to 4kB
+class Array; def to_h; Hash[*self.flatten]; end; end
 
 require 'panoptimon/util'
 
@@ -34,6 +35,40 @@ Panoptimon::Util.os(
 
       break unless config.include?('interval')
       sleep config['interval']
+    end
+  },
+  solaris: ->() {
+    cmd = ['kstat', '-p', '-m', 'unix', '-n', '/system_pages|vminfo/']
+    cmd.push(config['interval']) if config.include?('interval')
+
+    pagesize = `pagesize`.chomp.to_i/1024.0 or raise "no pagesize"
+    paged = ->(i) { ->(k){ i[k].to_i *  pagesize } }
+
+    p = IO.popen(cmd, 'r')
+    if p.eof?
+      raise $?;
+    end
+
+
+    until p.eof?
+      i = p.readline("\n\n").chomp.chomp.split(/\n/).
+        map {|l|
+          (k,v) = l.split(/\s+/)
+          k.nil? and next
+          k.sub!(/^unix:0:/, '')
+          [k,v]
+        }.to_h
+      
+      i = paged[i]
+
+      out = {
+        total:     GB(i['system_pages:pagestotal']),
+        free:      GB(i['system_pages:freemem']),
+        # TODO buffers / cached
+        swapped:   GB(i['vminfo:swap_alloc']),
+        swap_free: GB(i['vminfo:swap_avail']),
+      }
+      puts JSON::generate(out)
     end
   },
 )
