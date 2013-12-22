@@ -2,7 +2,7 @@
 
 require 'json'
 
-config = ARGV[0] ? JSON::parse(ARGV[0]) : {}
+config = ARGV[0] ? JSON::parse(ARGV[0], {symbolize_names: true}) : {}
 
 $stdout.sync = true
 
@@ -11,7 +11,7 @@ class Array; def to_h; Hash[*self.flatten]; end; end
 
 require 'panoptimon/util'
 
-Panoptimon::Util.os(
+Panoptimon::Util.os('-option' => config,
   linux: ->(){
     while(true) do
 
@@ -33,13 +33,13 @@ Panoptimon::Util.os(
       }
       puts JSON::generate(out)
 
-      break unless config.include?('interval')
-      sleep config['interval']
+      break unless config.include?(:interval)
+      sleep config[:interval]
     end
   },
   solaris: ->() {
     cmd = ['kstat', '-p', '-m', 'unix', '-n', '/system_pages|vminfo/']
-    cmd.push(config['interval']) if config.include?('interval')
+    cmd.push(config[:interval]) if config.include?(:interval)
 
     pagesize = `pagesize`.chomp.to_i/1024.0 or raise "no pagesize"
     paged = ->(i) { ->(k){ i[k].to_i *  pagesize } }

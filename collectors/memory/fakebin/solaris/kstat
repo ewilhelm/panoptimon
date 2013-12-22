@@ -1,0 +1,69 @@
+#!/bin/sh
+
+echo 'unix:0:system_pages:availrmem	4013662
+unix:0:system_pages:class	pages
+unix:0:system_pages:crtime	0
+unix:0:system_pages:desfree	524202
+unix:0:system_pages:desscan	25
+unix:0:system_pages:econtig	4225040384
+unix:0:system_pages:fastscan	2750296
+unix:0:system_pages:freemem	1803462
+unix:0:system_pages:kernelbase	0
+unix:0:system_pages:lotsfree	1048404
+unix:0:system_pages:minfree	262101
+unix:0:system_pages:nalloc	211566758
+unix:0:system_pages:nalloc_calls	29264
+unix:0:system_pages:nfree	210384555
+unix:0:system_pages:nfree_calls	23011
+unix:0:system_pages:nscan	0
+unix:0:system_pages:pagesfree	1803462
+unix:0:system_pages:pageslocked	63084235
+unix:0:system_pages:pagestotal	67097897
+unix:0:system_pages:physmem	67097898
+unix:0:system_pages:pp_kernel	29311799
+unix:0:system_pages:slowscan	100
+unix:0:system_pages:snaptime	14741176.3594887
+unix:0:vminfo:class	vm
+unix:0:vminfo:crtime	0
+unix:0:vminfo:freemem	30591083080432
+unix:0:vminfo:snaptime	14742094.57656
+unix:0:vminfo:swap_alloc	359614400702083
+unix:0:vminfo:swap_avail	365854101405267
+unix:0:vminfo:swap_free	366844264909289
+unix:0:vminfo:swap_resv	360604564206105
+unix:0:vminfo:updates	10119769
+'
+sleep 1
+echo 'unix:0:system_pages:availrmem	4013662
+unix:0:system_pages:class	pages
+unix:0:system_pages:crtime	0
+unix:0:system_pages:desfree	524202
+unix:0:system_pages:desscan	25
+unix:0:system_pages:econtig	4225040384
+unix:0:system_pages:fastscan	2750296
+unix:0:system_pages:freemem	1803462
+unix:0:system_pages:kernelbase	0
+unix:0:system_pages:lotsfree	1048404
+unix:0:system_pages:minfree	262101
+unix:0:system_pages:nalloc	211566758
+unix:0:system_pages:nalloc_calls	29264
+unix:0:system_pages:nfree	210384555
+unix:0:system_pages:nfree_calls	23011
+unix:0:system_pages:nscan	0
+unix:0:system_pages:pagesfree	1803462
+unix:0:system_pages:pageslocked	63084235
+unix:0:system_pages:pagestotal	67097897
+unix:0:system_pages:physmem	67097898
+unix:0:system_pages:pp_kernel	29311799
+unix:0:system_pages:slowscan	100
+unix:0:system_pages:snaptime	14741176.3594887
+unix:0:vminfo:class	vm
+unix:0:vminfo:crtime	0
+unix:0:vminfo:freemem	30591083080432
+unix:0:vminfo:snaptime	14742094.57656
+unix:0:vminfo:swap_alloc	359614400702083
+unix:0:vminfo:swap_avail	365854101405267
+unix:0:vminfo:swap_free	366844264909289
+unix:0:vminfo:swap_resv	360604564206105
+unix:0:vminfo:updates	10119769
+'
