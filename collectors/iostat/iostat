@@ -61,7 +61,7 @@ module Panoptimon
       end
       
       class OS_linux < Panoptimon::Collector::IOStat
-        def flags; '-xd' ; end
+        def flags; '-xdk' ; end
 
         def cue (p)
           2.times { x = p.readline until x == "\n" } # header + first sample

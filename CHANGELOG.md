@@ -1,3 +1,7 @@
+# 0.4.15
+
+* collectors/iostat - compat for older (v9.x) sysstat
+
 # 0.4.14
 
 * collectors/iostat - portability: parsing solaris output
