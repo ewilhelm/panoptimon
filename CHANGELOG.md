@@ -1,3 +1,7 @@
+# 0.4.17
+
+* collectors/memory - portability: parsing solaris kstat
+
 # 0.4.16
 
 * hangup - disable distant signal traps/ignores
