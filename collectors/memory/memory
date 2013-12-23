@@ -2,32 +2,95 @@
 
 require 'json'
 
-config = ARGV[0] ? JSON::parse(ARGV[0]) : {}
+config = ARGV[0] ? JSON::parse(ARGV[0], {symbolize_names: true}) : {}
 
 $stdout.sync = true
 
 def GB b; (b.to_f / 1024**2).round(6); end # GB significant down to 4kB
+class Array; def to_h; Hash[*self.flatten]; end; end
 
-while(true) do
+require 'panoptimon/util'
 
-  info = File.readlines('/proc/meminfo').map {|l|
-    l = l.chomp.split(/:\s+/, 2)
-    raise "units assumption failed" if
-      l[1].sub!(/\s+(kB)$/, '') and not($+ == 'kB')
-    l
-  }
-  i = Hash[*info.flatten]
+Panoptimon::Util.os('-option' => config,
+  linux: ->(){
+    while(true) do
 
-  out = {
-    total:     GB(i['MemTotal']),
-    free:      GB(i['MemFree']),
-    buffers:   GB(i['Buffers']),
-    cached:    GB(i['Cached']),
-    swapped:   GB(i['SwapTotal'].to_i - i['SwapFree'].to_i),
-    swap_free: GB(i['SwapFree']),
-  }
-  puts JSON::generate(out)
+      info = File.readlines('/proc/meminfo').map {|l|
+        l = l.chomp.split(/:\s+/, 2)
+        raise "units assumption failed" if
+          l[1].sub!(/\s+(kB)$/, '') and not($+ == 'kB')
+        l
+      }
+      i = Hash[*info.flatten]
 
-  break unless config.include?('interval')
-  sleep config['interval']
-end
+      out = {
+        total:     GB(i['MemTotal']),
+        free:      GB(i['MemFree']),
+        buffers:   GB(i['Buffers']),
+        cached:    GB(i['Cached']),
+        swapped:   GB(i['SwapTotal'].to_i - i['SwapFree'].to_i),
+        swap_free: GB(i['SwapFree']),
+      }
+      puts JSON::generate(out)
+
+      break unless config.include?(:interval)
+      sleep config[:interval]
+    end
+  },
+  solaris: ->() {
+    cmd = ['kstat', '-p', '-m', 'unix', '-n', '/system_pages|vminfo/']
+    cmd.push(config[:interval]) if config.include?(:interval)
+
+    pagesize = `pagesize`.chomp.to_i/1024.0 or raise "no pagesize"
+    paged = ->(i) {
+      ->(k){ i[k].to_i *  pagesize } # returns kB
+    }
+
+    # accumulated values change every "second"
+    # so we have to store and look-back, check 'updates' counter delta
+    delta_vals = ->(){
+      pick = {
+        swapped:   'vminfo:swap_alloc',
+        swap_free: 'vminfo:swap_avail',
+      }
+      vals = {} # running record
+
+      ->(i){ # inputs in pages, results in GB
+        up0 = vals['updates']
+        up1 = vals['updates'] = i['vminfo:updates'].to_i
+        upD = up1 - up0 if up0
+        ret = {}
+        pick.each_pair {|ko,ki|
+          v0 = vals[ki]
+          v1 = vals[ki] = i[ki].to_i
+          ret[ko] = GB((v0 ? (v1 - v0)/upD : v1/up1) * pagesize)
+        }
+        return ret
+      }
+    }[]
+    ####################################################################
+
+    p = IO.popen(cmd, 'r')
+    raise $? if p.eof?
+
+    until p.eof?
+      i = p.readline("\n\n").chomp.chomp.split(/\n/).
+        map {|l|
+          (k,v) = l.split(/\s+/)
+          k.nil? and next
+          k.sub!(/^unix:0:/, '')
+          [k,v]
+        }.to_h
+      
+      deltas = delta_vals[i]
+      i = paged[i]
+
+      out = {
+        total:     GB(i['system_pages:pagestotal']),
+        free:      GB(i['system_pages:freemem']),
+        # TODO buffers / cached
+      }.merge(deltas)
+      puts JSON::generate(out)
+    end
+  },
+)
