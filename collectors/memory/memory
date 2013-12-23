@@ -42,13 +42,37 @@ Panoptimon::Util.os('-option' => config,
     cmd.push(config[:interval]) if config.include?(:interval)
 
     pagesize = `pagesize`.chomp.to_i/1024.0 or raise "no pagesize"
-    paged = ->(i) { ->(k){ i[k].to_i *  pagesize } }
+    paged = ->(i) {
+      ->(k){ i[k].to_i *  pagesize } # returns kB
+    }
+
+    # accumulated values change every "second"
+    # so we have to store and look-back, check 'updates' counter delta
+    delta_vals = ->(){
+      pick = {
+        swapped:   'vminfo:swap_alloc',
+        swap_free: 'vminfo:swap_avail',
+      }
+      vals = {} # running record
+
+      ->(i){ # inputs in pages, results in GB
+        up0 = vals['updates']
+        up1 = vals['updates'] = i['vminfo:updates'].to_i
+        upD = up1 - up0 if up0
+        ret = {}
+        pick.each_pair {|ko,ki|
+          v0 = vals[ki]
+          v1 = vals[ki] = i[ki].to_i
+          next unless(v0 and v0 < v1)
+          ret[ko] = GB((v1 - v0) * pagesize / upD)
+        }
+        return up0.nil? ? {} : ret
+      }
+    }[]
+    ####################################################################
 
     p = IO.popen(cmd, 'r')
-    if p.eof?
-      raise $?;
-    end
-
+    raise $? if p.eof?
 
     until p.eof?
       i = p.readline("\n\n").chomp.chomp.split(/\n/).
@@ -59,15 +83,14 @@ Panoptimon::Util.os('-option' => config,
           [k,v]
         }.to_h
       
+      deltas = delta_vals[i]
       i = paged[i]
 
       out = {
         total:     GB(i['system_pages:pagestotal']),
         free:      GB(i['system_pages:freemem']),
         # TODO buffers / cached
-        swapped:   GB(i['vminfo:swap_alloc']),
-        swap_free: GB(i['vminfo:swap_avail']),
-      }
+      }.merge(deltas)
       puts JSON::generate(out)
     end
   },
