@@ -63,10 +63,9 @@ Panoptimon::Util.os('-option' => config,
         pick.each_pair {|ko,ki|
           v0 = vals[ki]
           v1 = vals[ki] = i[ki].to_i
-          next unless(v0 and v0 < v1)
-          ret[ko] = GB((v1 - v0) * pagesize / upD)
+          ret[ko] = GB((v0 ? (v1 - v0)/upD : v1/up1) * pagesize)
         }
-        return up0.nil? ? {} : ret
+        return ret
       }
     }[]
     ####################################################################
