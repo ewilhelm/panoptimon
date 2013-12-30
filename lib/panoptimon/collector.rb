@@ -32,7 +32,14 @@ class Collector
     @last_run_time = Time.now # TODO .to_i ?
 
     logger.info {"run command: #{cmdc}"}
-    @child = EM.popen3b(cmdc, CollectorSink, self)
+    @child =
+      begin
+        was_env = ENV
+        ENV.replace(_env_fixup(was_env))
+        EM.popen3b(cmdc, CollectorSink, self)
+      ensure
+        ENV.replace(was_env)
+      end
     @child.on_unbind { |status, errmess|
       logger.error {"collector #{name} failed: #{status}" +
         (errmess.nil? ? '' :
@@ -51,6 +58,18 @@ class Collector
 
   def running?
     @child.nil? ? false : true
+  end
+
+  # Include the lib path that contains this panoptimon
+  # TODO later maybe have configurable env.
+  def _env_fixup (was)
+    env = Hash[was]
+    libs = (env['RUBYLIB'] || '').split(File::PATH_SEPARATOR)
+    libdir = File.expand_path('../../', __FILE__)
+    libs.unshift(libdir) if
+      libs.find_index {|p| libdir == File.absolute_path(p) }.nil?
+    env['RUBYLIB'] = libs.join(File::PATH_SEPARATOR)
+    return env
   end
 
 end
