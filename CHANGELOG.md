@@ -1,3 +1,13 @@
+# 0.5.0
+
+* collector.rb - make panoptimon available in $RUBYLIB
+
+This allows ruby collectors to access the same library path as the
+collector.rb which loaded them (only intended to provide access for
+'panoptimon/util'.) This should allow more flexibility with e.g.
+bundler.  This approach is rather limited, but maybe simpler than
+treating each collector as a standalone executable.
+
 # 0.4.17
 
 * collectors/memory - portability: parsing solaris kstat
