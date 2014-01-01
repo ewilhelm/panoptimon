@@ -51,5 +51,7 @@ entry in the argument's hash can be used to alias service names.
 * up: seconds the service has been up (negative if it has been shutdown)
 * flaps: number of flaps (runs under 'flaptime') within the 'since' horizon
 
-  services|daemontools|syslog-ng|up => $seconds
-  services|daemontools|syslog-ng|flaps => $n
+```none
+    services|daemontools|syslog-ng|up => $seconds
+    services|daemontools|syslog-ng|flaps => $n
+```
