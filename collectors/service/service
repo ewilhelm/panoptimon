@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (C) 2012 Sourcefire, Inc.
+# Copyright (C) 2012-2014 Cisco, Inc.
 
 require 'json'
 require 'pathname'
