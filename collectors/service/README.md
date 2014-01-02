@@ -24,6 +24,9 @@ entry in the argument's hash can be used to alias service names.
 
     `"shortname": {"path" : "/service/name-too-long-for-daily-use"}`
 
+You must provide either an explicit list of services or some globs in
+'-monitor' (or else nothing is monitored.)
+
 ## Example
 
 ```json

@@ -13,10 +13,11 @@ class MatchData; def to_h
 end; end
 class Array; def to_h; Hash[self]; end; end
 
+# each of these returns a lambda
 handler = {
   daemontools: ->(srv){
     o = srv.delete(:'-options') || {}
-    mon = srv.delete(:'-monitor')
+    mon = srv.delete(:'-monitor') || []
     cmd = [o[:svstat] || 'svstat'].flatten
     fn = mon.map {|n| Pathname.glob(n.to_s)}.flatten.
         map {|p| [p.to_s, p.basename.to_s.to_sym]}.to_h.
@@ -42,6 +43,7 @@ handler = {
   },
 }
 
+# initialize the required handlers
 services = Hash[opt[:services].map {|k,v|
   how = handler[k] or raise "unknown service type #{k}"; [k, how[v]]}]
 
@@ -69,6 +71,8 @@ class AFlap
   end
 end
 
+########################################################################
+# mainloop
 hist = AFlap.new(opt)
 while true
   metrics = services.map {|k,v|
