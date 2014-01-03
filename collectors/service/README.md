@@ -34,6 +34,17 @@ entry in the argument's hash can be used to alias service names.
 You must provide either an explicit list of services or some globs in
 '-monitor' (or else nothing is monitored.)
 
+### smf
+
+Supported arguments:
+
+* `-monitor` — an array of globs for service identifiers
+* `-options` — a hash of options
+    * `svcs` — path to svcs command (or as array with arguments)
+
+The globs given in `-monitor` are passed to `svcs` and must match the
+service FMRI.
+
 ## Example
 
 ```json
