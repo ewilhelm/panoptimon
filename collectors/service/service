@@ -85,7 +85,7 @@ while true
   # TODO move these sorts of things to a summarizing plugin
   if opt[:faults]
     faulted = metrics.map {|daemon,h| h.map {|service,i|
-      i[:up] > 0 ? [] : ["#{daemon}|#{service}"]
+      i[:up] > 0 && not(i[:flaps] > 0) ? [] : ["#{daemon}|#{service}"]
     }}.flatten
     metrics = {} if opt[:faults] == 'only'
     metrics[:"-faults"] = faulted.count
