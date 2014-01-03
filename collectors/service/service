@@ -81,6 +81,17 @@ while true
     }.to_h
     [k, data]
   }.to_h
+
+  # TODO move these sorts of things to a summarizing plugin
+  if opt[:faults]
+    faulted = metrics.map {|daemon,h| h.map {|service,i|
+      i[:up] > 0 ? [] : ["#{daemon}|#{service}"]
+    }}.flatten
+    metrics = {} if opt[:faults] == 'only'
+    metrics[:"-faults"] = faulted.count
+    metrics[:_info] ||= {faults: faulted} if faulted.count > 0
+  end
+
   puts JSON::generate(metrics)
   sleep(opt[:interval])
   if opt[:limit]

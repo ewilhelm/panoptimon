@@ -8,6 +8,13 @@ daemons.
 The `services` hash must contain entries for whichever service
 management daemons you wish to monitor.
 
+## Options
+
+* `interval` — report interval, in seconds
+* `flaptime` — flap threshold, in seconds
+* `since` — flap horizon, in seconds
+* `faults` — (experimental) report fault statistics [true|false|"only"]
+
 ## Available Daemons
 
 ### daemontools
