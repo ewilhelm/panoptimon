@@ -1,5 +1,5 @@
-# Copyright (C) 2012-2013 Sourcefire, Inc.
+# Copyright (C) 2012-2014 Cisco, Inc.
 
 module Panoptimon
-  VERSION = "0.5.0"
+  VERSION = "0.5.1"
 end

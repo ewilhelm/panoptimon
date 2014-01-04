@@ -1,3 +1,7 @@
+# 0.5.1
+
+* collectors/disk - solaris portability
+
 # 0.5.0
 
 * collector.rb - make panoptimon available in $RUBYLIB
