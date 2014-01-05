@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (C) 2012 Sourcefire, Inc.
+# Copyright (C) 2012-2014 Cisco, Inc.
 
 require 'json'
 require 'pathname'
@@ -13,10 +13,11 @@ class MatchData; def to_h
 end; end
 class Array; def to_h; Hash[self]; end; end
 
+# each of these returns a lambda
 handler = {
   daemontools: ->(srv){
     o = srv.delete(:'-options') || {}
-    mon = srv.delete(:'-monitor')
+    mon = srv.delete(:'-monitor') || []
     cmd = [o[:svstat] || 'svstat'].flatten
     fn = mon.map {|n| Pathname.glob(n.to_s)}.flatten.
         map {|p| [p.to_s, p.basename.to_s.to_sym]}.to_h.
@@ -40,8 +41,46 @@ handler = {
       }.to_h
     }
   },
+  smf: ->(srv) {
+    mon = srv.delete(:'-monitor') || []
+    mon.is_a?(Array) or raise "'-monitor' argument must be an array"
+    o = srv.delete(:'-options') || {}
+    cmd = [o[:svcs] || 'svcs'].flatten
+
+    require 'date'
+    
+    return ->() {
+      now = Time.now.to_i
+      stat = IO.popen(cmd + ['-x'] + mon) {|fh| fh.readlines("\n\n") }.
+        map {|svc|
+          info = svc.match(%r{
+            \A(?<fmri>\S+)\s.*?\n
+            \s+State:\s+(?<state>\S+)\s+
+              since\s+(?<date>.*?)\n
+          }x) or raise "cannot parse #{svc}"
+          info = info.to_h
+          duration = now - DateTime.parse(info[:date]).to_time.to_i
+          # don't report negative duration
+          duration = 0 if duration < 0
+          # fault time needs to be non-zero to turn into negative metric
+          duration = 1 if duration == 0 and info[:state] != 'online'
+          [info[:fmri], {
+            state: (info[:state] == 'online' ? 'up' : info[:state]),
+            duration: duration,
+          }]
+        }.to_h
+      raise "svcs error - #{$?.exitstatus}" unless $?.success?
+
+      # TODO report disabled, but explicitly listed services?
+      stat.keys.each {|fmri|
+        stat.delete(fmri) if stat[fmri][:state] == 'disabled'
+      }
+      return stat
+    }
+  },
 }
 
+# initialize the required handlers
 services = Hash[opt[:services].map {|k,v|
   how = handler[k] or raise "unknown service type #{k}"; [k, how[v]]}]
 
@@ -69,6 +108,8 @@ class AFlap
   end
 end
 
+########################################################################
+# mainloop
 hist = AFlap.new(opt)
 while true
   metrics = services.map {|k,v|
@@ -77,6 +118,17 @@ while true
     }.to_h
     [k, data]
   }.to_h
+
+  # TODO move these sorts of things to a summarizing plugin
+  if opt[:faults]
+    faulted = metrics.map {|daemon,h| h.map {|service,i|
+      i[:up] > 0 && not(i[:flaps] > 0) ? [] : ["#{daemon}|#{service}"]
+    }}.flatten
+    metrics = {} if opt[:faults] == 'only'
+    metrics[:"-faults"] = faulted.count
+    metrics[:_info] ||= {faults: faulted} if faulted.count > 0
+  end
+
   puts JSON::generate(metrics)
   sleep(opt[:interval])
   if opt[:limit]

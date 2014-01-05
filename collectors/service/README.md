@@ -1,26 +1,51 @@
-upstart: `initctl list`
+# Description
 
-```none
-qemu-kvm start/running
-rc stop/waiting
-rsyslog start/running, process 1237
-network-interface (lo) start/running
-```
+Reports on running / flapping services under various service management
+daemons.
 
-daemontools: `svstat /service/\*` (aside: `ps -eo %a | grep '[s]vscan ' | cut -d' ' -f2 | sort -u`)
+# Config
 
-```none
+The `services` hash must contain entries for whichever service
+management daemons you wish to monitor.
 
-/service/chef-client: up (pid 14971) 1197 seconds
-/service/hubot: up (pid 6583) 8895 seconds
-/service/resmon: up (pid 633) 4131042 seconds
-/service/syslog-ng: up (pid 632) 4131042 seconds
-/service/mail-in:  down 3 seconds, normally up
-```
+## Options
 
-systemd: `systemctl list-units --full --type=service --all`, `systemctl show NAME NAME NAME ...`
+* `interval` — report interval, in seconds
+* `flaptime` — flap threshold, in seconds
+* `since` — flap horizon, in seconds
+* `faults` — (experimental) report fault statistics [true|false|"only"]
 
-## Config
+## Available Daemons
+
+### daemontools
+
+Supported arguments:
+
+* `-monitor` — an array of globs for service identifiers
+* `-options` — a hash of options
+    * `svstat` — path to svstat command (or as array with arguments)
+
+All other keys are taken as the name of services to report on.  By
+default, these are found under `/service/$name`, but an optional `path`
+entry in the argument's hash can be used to alias service names.
+
+    `"shortname": {"path" : "/service/name-too-long-for-daily-use"}`
+
+You must provide either an explicit list of services or some globs in
+'-monitor' (or else nothing is monitored.)
+
+### smf
+
+Supported arguments:
+
+* `-monitor` — an array of globs for service identifiers
+* `-options` — a hash of options
+    * `svcs` — path to svcs command (or as array with arguments)
+
+The globs given in `-monitor` are passed to `svcs` and must match the
+service FMRI.
+
+## Example
 
 ```json
 {
@@ -28,8 +53,8 @@ systemd: `systemctl list-units --full --type=service --all`, `systemctl show NAM
   flaptime: 30,
   since: 900,
   services: {
-    init: { foo : { status_cmd : "..."} },
-    systemd: {
+    init: { foo : { status_cmd : "..."} }, # TODO
+    systemd: { # TODO
       sshd : {...}
     },
     daemontools: {
@@ -42,10 +67,12 @@ systemd: `systemctl list-units --full --type=service --all`, `systemctl show NAM
 }
 ```
 
-## Output
+# Output
 
 * up: seconds the service has been up (negative if it has been shutdown)
 * flaps: number of flaps (runs under 'flaptime') within the 'since' horizon
 
-  services|daemontools|syslog-ng|up => $seconds
-  services|daemontools|syslog-ng|flaps => $n
+```none
+    services|daemontools|syslog-ng|up => $seconds
+    services|daemontools|syslog-ng|flaps => $n
+```
