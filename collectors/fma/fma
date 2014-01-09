@@ -9,12 +9,12 @@ opt = JSON::parse(ARGV[0], {symbolize_names: true})
 cmd = [opt[:fmadm] || 'fmadm'].flatten
 
 faults = IO.popen(cmd + ['faulty', '-r']) {|fh| fh.readlines("\n") }.
-  map {|fault| fault.split(/\s+/)}.to_h
+  map {|fault| fault.chomp.split(/\s+/, 2)}.to_h
 raise "fmadm error - #{$?.exitstatus}" unless $?.success?
 
 metrics = {
   faults: faults.keys.count,
 }
-metrics[:_info] = faults if faults.keys.count
+metrics[:_info] = faults if faults.keys.count > 0
 
 puts JSON::generate(metrics)
