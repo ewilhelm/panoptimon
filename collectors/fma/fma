@@ -12,6 +12,14 @@ faults = IO.popen(cmd + ['faulty', '-r']) {|fh| fh.readlines("\n") }.
   map {|fault| fault.chomp.split(/\s+/, 2)}.to_h
 raise "fmadm error - #{$?.exitstatus}" unless $?.success?
 
+# SmartOS-specific bug
+skip = %w(
+  fmd:///module/ses-log-transport
+  fmd:///module/eft
+).map {|n| [n, true]}.to_h
+
+faults.keys.each {|k| faults.delete(k) if skip[k]}
+
 metrics = {
   faults: faults.keys.count,
 }
