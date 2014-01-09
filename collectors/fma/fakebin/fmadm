@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo 'fmd:///module/ses-log-transport                                       degraded
+fmd:///module/eft                                                     degraded'

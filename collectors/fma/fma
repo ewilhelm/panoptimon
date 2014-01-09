@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2014 Cisco, Inc.
+
+require 'json'
+class Array; def to_h; Hash[self]; end; end
+
+opt = JSON::parse(ARGV[0], {symbolize_names: true})
+
+cmd = [opt[:fmadm] || 'fmadm'].flatten
+
+faults = IO.popen(cmd + ['faulty', '-r']) {|fh| fh.readlines("\n") }.
+  map {|fault| fault.split(/\s+/)}.to_h
+raise "fmadm error - #{$?.exitstatus}" unless $?.success?
+
+metrics = {
+  faults: faults.keys.count,
+}
+metrics[:_info] = faults if faults.keys.count
+
+puts JSON::generate(metrics)
