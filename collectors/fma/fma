@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2014 Cisco, Inc.
+
+require 'json'
+class Array; def to_h; Hash[self]; end; end
+
+opt = JSON::parse(ARGV[0], {symbolize_names: true})
+
+cmd = [opt[:fmadm] || 'fmadm'].flatten
+
+faults = IO.popen(cmd + ['faulty', '-r']) {|fh| fh.readlines("\n") }.
+  map {|fault| fault.chomp.split(/\s+/, 2)}.to_h
+raise "fmadm error - #{$?.exitstatus}" unless $?.success?
+
+# SmartOS-specific bug
+skip = %w(
+  fmd:///module/ses-log-transport
+  fmd:///module/eft
+).map {|n| [n, true]}.to_h
+
+faults.keys.each {|k| faults.delete(k) if skip[k]}
+
+metrics = {
+  faults: faults.keys.count,
+}
+metrics[:_info] = faults if faults.keys.count > 0
+
+puts JSON::generate(metrics)

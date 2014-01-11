@@ -1,3 +1,7 @@
+# 0.5.3
+
+* collectors/fma - solaris faults collector
+
 # 0.5.2
 
 * collectors/service - solaris (smf) implementation
