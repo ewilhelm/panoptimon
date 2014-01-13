@@ -9,7 +9,21 @@ opt = ARGV[0] ? JSON::parse(ARGV[0], {symbolize_names: true}) : {}
 zpool_cmd = [opt[:zpool_cmd] || 'zpool'].flatten
 zfs_cmd   = [opt[:zfs_cmd] || 'zfs'].flatten
 
+########################################################################
 states = { ONLINE: 10,  DEGRADED: 5, FAULTED: 0, UNAVAIL: 0 }
+convert = ->(){
+  unit = {
+    'G' => 1000000000,
+    'M' => 1000000,
+    'K' => 1000
+  }
+  ->(x) {
+    x =~ /([\d.]+)([GMK])/ ?
+      ($1.to_f * unit[$2]).to_i
+      : x.to_i
+  }
+}[]
+########################################################################
 
 status = IO.popen(zpool_cmd + ['status', '-v']) {|fh| fh.readline(nil)}.
   split(/\s+pool:\s+(\S+)\n/).drop(1).to_h
@@ -17,9 +31,33 @@ status = IO.popen(zpool_cmd + ['status', '-v']) {|fh| fh.readline(nil)}.
 metrics = status.keys.map {|pool|
   info = status[pool].split(/^\s*(\w+):\s+/).drop(1).to_h
   info.each_value {|v| v.chomp!}
-  m = {faults: 0}
+  m = {} # inner metrics
   m[:state] = states[info['state'].to_sym] ||
     begin; warn "unknown state #{info['state']}"; -1; end
+
+  info['config'] =~ /NAME\s+STATE\s+READ\s+WRITE/ or
+    raise "not expecting format of config: #{info['config']}"
+  errors = {}
+  info['config'].split(/\n/).drop(1).each {|line|
+    (dev, state, r, w, c) = line.split(/\s+/).drop(1)
+    (r,w,c) = [r,w,c].map {|x| convert[x]}
+    if [r,w,c].find {|x| x > 0} || state != 'ONLINE'
+      e = errors[dev] = {state: state, read: r, write: w, cksum: c}
+      [:read, :write, :cksum].each {|k| e.delete(k) if e[k] == 0}
+    end
+  }
+  m[:faults] = errors.keys.count
+  if errors.keys.count > 0
+    e = m[:errors] = {_info: errors}
+    if pe = errors.delete(pool)
+      pe.delete(:state) # string / redundant
+      e.merge!(pe)
+    end
+  end
+
+  if info['errors'] =~ /files:\n\n\s*(\S+.*)/m
+    m[:errors][:_info][:_files] = $1.chomp.split(/\s+/)
+  end
 
   [pool, m]
 }.to_h
