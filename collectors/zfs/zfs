@@ -11,12 +11,8 @@ zfs_cmd   = [opt[:zfs_cmd] || 'zfs'].flatten
 
 ########################################################################
 states = { ONLINE: 10,  DEGRADED: 5, FAULTED: 0, UNAVAIL: 0 }
-convert = ->(){
-  unit = {
-    'G' => 1000000000,
-    'M' => 1000000,
-    'K' => 1000
-  }
+convert_10 = ->(){
+  unit = { 'G' => 1E9, 'M' => 1E6, 'K' => 1E3 }
   ->(x) {
     x =~ /([\d.]+)([GMK])/ ?
       ($1.to_f * unit[$2]).to_i
@@ -40,7 +36,7 @@ metrics = status.keys.map {|pool|
   errors = {}
   info['config'].split(/\n/).drop(1).each {|line|
     (dev, state, r, w, c) = line.split(/\s+/).drop(1)
-    (r,w,c) = [r,w,c].map {|x| convert[x]}
+    (r,w,c) = [r,w,c].map {|x| convert_10[x]}
     if [r,w,c].find {|x| x > 0} || state != 'ONLINE'
       e = errors[dev] = {state: state, read: r, write: w, cksum: c}
       [:read, :write, :cksum].each {|k| e.delete(k) if e[k] == 0}
