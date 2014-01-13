@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2014 Cisco, Inc.
+
+require 'json'
+class Array; def to_h; Hash[*self.flatten]; end; end
+
+opt = ARGV[0] ? JSON::parse(ARGV[0], {symbolize_names: true}) : {}
+
+zpool_cmd = [opt[:zpool_cmd] || 'zpool'].flatten
+zfs_cmd   = [opt[:zfs_cmd] || 'zfs'].flatten
+
+states = { ONLINE: 10,  DEGRADED: 5, FAULTED: 0, UNAVAIL: 0 }
+
+status = IO.popen(zpool_cmd + ['status', '-v']) {|fh| fh.readline(nil)}.
+  split(/\s+pool:\s+(\S+)\n/).drop(1).to_h
+
+metrics = status.keys.map {|pool|
+  info = status[pool].split(/^\s*(\w+):\s+/).drop(1).to_h
+  info.each_value {|v| v.chomp!}
+  m = {faults: 0}
+  m[:state] = states[info['state'].to_sym] ||
+    begin; warn "unknown state #{info['state']}"; -1; end
+
+  [pool, m]
+}.to_h
+
+puts JSON::generate(metrics)

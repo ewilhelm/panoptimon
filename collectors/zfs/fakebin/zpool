@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if   [ "x$KNOB" == "xOK" ] ; then
+  cat << END_OF_OUTPUT
+  pool: monkey
+ state: ONLINE
+ scan: none requested
+config:
+
+	NAME         STATE     READ WRITE CKSUM
+	monkey       ONLINE       0     0     0
+	  mirror-0   ONLINE       0     0     0
+	    /tmp/p1  ONLINE       0     0     0
+	    /tmp/p2  ONLINE       0     0     0
+	  mirror-1   ONLINE       0     0     0
+	    /tmp/p3  ONLINE       0     0     0
+	    /tmp/p4  ONLINE       0     0     0
+
+errors: No known data errors
+
+  pool: tank
+ state: ONLINE
+ scan: none requested
+config:
+
+	NAME        STATE     READ WRITE CKSUM
+	tank        ONLINE       0     0     0
+	  /dev/sdg  ONLINE       0     0     0
+
+errors: No known data errors
+END_OF_OUTPUT
+
+elif [ "x$KNOB" == "xDEGRADED" ] ; then
+  echo bah
+else
+  echo "oh no" >&2
+  exit 1
+fi
