@@ -23,6 +23,7 @@ convert_10 = ->(){
 
 status = IO.popen(zpool_cmd + ['status', '-v']) {|fh| fh.readline(nil)}.
   split(/\s+pool:\s+(\S+)\n/).drop(1).to_h
+raise "zpool error - #{$?.exitstatus}" unless $?.success?
 
 metrics = status.keys.map {|pool|
   info = status[pool].split(/^\s*(\w+):\s+/).drop(1).to_h
