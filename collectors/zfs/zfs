@@ -19,6 +19,15 @@ convert_10 = ->(){
       : x.to_i
   }
 }[]
+convert_GB = ->(){
+  exp = 0
+  unit = %w(B K M G T P E Z).map {|p| exp += 1; [p, 1024**exp-1]}.to_h
+  ->(x) {
+    (x.sub(/([BKMGTPEZ])/, '').to_f *
+      (unit[$1] or raise "unknown unit #{$1}") /
+      unit['G']).round(6)
+  }
+}[]
 ########################################################################
 
 status = IO.popen(zpool_cmd + ['status', '-v']) {|fh| fh.readline(nil)}.
@@ -58,5 +67,16 @@ metrics = status.keys.map {|pool|
 
   [pool, m]
 }.to_h
+
+
+IO.popen(zfs_cmd + ['list', '-H', '-o', 'name,used,avail'] +
+  metrics.keys) {|fh|
+  fh.readlines.each {|line|
+    (pool, used, free) = line.split(/\s+/) 
+    metrics[pool][:used] = convert_GB[used]
+    metrics[pool][:free] = convert_GB[free]
+  }
+}
+raise "zpool error - #{$?.exitstatus}" unless $?.success?
 
 puts JSON::generate(metrics)
