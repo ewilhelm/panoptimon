@@ -1,3 +1,7 @@
+# 0.5.4
+
+* collectors/zfs - zpool health & space collector
+
 # 0.5.3
 
 * collectors/fma - solaris faults collector

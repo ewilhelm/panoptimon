@@ -1,0 +1,131 @@
+#!/bin/bash
+
+if   [ "x$KNOB" == "xOK" ] ; then
+  cat << END_OF_OUTPUT
+  pool: monkey
+ state: ONLINE
+ scan: none requested
+config:
+
+	NAME         STATE     READ WRITE CKSUM
+	monkey       ONLINE       0     0     0
+	  mirror-0   ONLINE       0     0     0
+	    /tmp/p1  ONLINE       0     0     0
+	    /tmp/p2  ONLINE       0     0     0
+	  mirror-1   ONLINE       0     0     0
+	    /tmp/p3  ONLINE       0     0     0
+	    /tmp/p4  ONLINE       0     0     0
+
+errors: No known data errors
+
+  pool: tank
+ state: ONLINE
+ scan: none requested
+config:
+
+	NAME        STATE     READ WRITE CKSUM
+	tank        ONLINE       0     0     0
+	  /dev/sdg  ONLINE       0     0     0
+
+errors: No known data errors
+END_OF_OUTPUT
+
+elif [ "x$KNOB" == "xERRORS" ] ; then
+  cat << END_OF_OUTPUT
+  pool: monkey
+ state: ONLINE
+status: One or more devices has experienced an unrecoverable error.  An
+        attempt was made to correct the error.  Applications are unaffected.
+action: Determine if the device needs to be replaced, and clear the errors
+        using 'zpool clear' or replace the device with 'zpool replace'.
+   see: http://zfsonlinux.org/msg/ZFS-8000-9P
+ scan: scrub repaired 2K in 0h0m with 0 errors on Sat Jan 11 11:47:26 2014
+config:
+
+	    NAME         STATE     READ WRITE CKSUM
+	    monkey       ONLINE       0     0     0
+	      mirror-0   ONLINE       0     0     0
+	        /tmp/p1  ONLINE       0     0     0
+	        /tmp/p2  ONLINE       9 80.6K     0
+	      mirror-1   ONLINE       0     0     0
+	        /tmp/p3  ONLINE       0     0     0
+	        /tmp/p4  ONLINE       0     0     0
+
+ 
+errors: No known data errors
+END_OF_OUTPUT
+
+elif [ "x$KNOB" == "xLOSSY" ] ; then
+  cat << END_OF_OUTPUT
+  pool: tank
+ state: UNAVAIL
+status: One or more devices are faulted in response to IO failures.
+config:
+
+        NAME        STATE     READ WRITE CKSUM
+        tank        UNAVAIL      0     0     0  insufficient replicas
+          c1t0d0    ONLINE       0     0     0
+          c1t1d0    UNAVAIL      4     1     0  cannot open
+
+errors: Permanent errors have been detected in the following files:
+
+/tank/data/aaa
+/tank/data/bbb
+/tank/data/ccc
+END_OF_OUTPUT
+
+elif [ "x$KNOB" == "xDEGRADED" ] ; then
+  cat << END_OF_OUTPUT
+  pool: monkey
+ state: DEGRADED
+status: One or more devices could not be opened.  Sufficient replicas exist for
+        the pool to continue functioning in a degraded state.
+action: Attach the missing device and online it using 'zpool online'.
+   see: http://zfsonlinux.org/msg/ZFS-8000-2Q
+ scan: scrub repaired 0 in 0h0m with 0 errors on Sat Jan 11 16:45:29 2014
+config:
+
+        NAME          STATE     READ WRITE CKSUM
+        monkey        DEGRADED     0     0     0
+          mirror-0    DEGRADED     0     0     0
+            /tmp/p1a  UNAVAIL      0     0     0  cannot open
+            /tmp/p2   ONLINE       0     0     0
+          mirror-1    ONLINE       0     0     0
+            /tmp/p3   ONLINE       0     0     0
+            /tmp/p4   ONLINE       0     0     0
+
+errors: No known data errors
+END_OF_OUTPUT
+
+elif [ "x$KNOB" == "xCORRUPT" ] ; then
+  cat << END_OF_OUTPUT
+  pool: monkey
+ state: ONLINE
+status: One or more devices has experienced an error resulting in data
+        corruption.  Applications may be affected.
+action: Restore the file in question if possible.  Otherwise restore the
+        entire pool from backup.
+   see: http://zfsonlinux.org/msg/ZFS-8000-8A
+ scan: resilvered 0 in 0h0m with 0 errors on Sat Jan 11 11:52:56 2014
+config:
+
+        NAME         STATE     READ WRITE CKSUM
+        monkey       ONLINE       0 30.0K     0
+          mirror-0   ONLINE       0 30.0K     0
+            /tmp/p1  ONLINE      23 59.3K     0
+            /tmp/p2  ONLINE      47 62.3K     0
+          mirror-1   ONLINE       0     0     0
+            /tmp/p3  ONLINE       0     0     0
+            /tmp/p4  ONLINE       0     0     0
+
+errors: Permanent errors have been detected in the following files:
+
+        monkey:<0x0>
+        /monkey/
+END_OF_OUTPUT
+
+
+else
+  echo "oh no" >&2
+  exit 1
+fi
