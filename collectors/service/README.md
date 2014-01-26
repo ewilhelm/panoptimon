@@ -49,7 +49,7 @@ service FMRI.
 
 ```json
 {
-  interval: 60
+  interval: 60,
   flaptime: 30,
   since: 900,
   services: {
