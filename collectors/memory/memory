@@ -39,7 +39,7 @@ Panoptimon::Util.os('-option' => config,
   },
   solaris: ->() {
     cmd = ['kstat', '-p', '-m', 'unix', '-n', '/system_pages|vminfo/']
-    cmd.push(config[:interval]) if config.include?(:interval)
+    cmd.push(config[:interval].to_s) if config.include?(:interval)
 
     pagesize = `pagesize`.chomp.to_i/1024.0 or raise "no pagesize"
     paged = ->(i) {
