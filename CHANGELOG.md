@@ -1,3 +1,7 @@
+# 0.5.5
+
+* collectors/memory - bugfix: cmd+interval strong typing
+
 # 0.5.4
 
 * collectors/zfs - zpool health & space collector
