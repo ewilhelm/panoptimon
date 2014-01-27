@@ -1,3 +1,7 @@
+# 0.5.6
+
+* collectors/service - docs update
+
 # 0.5.5
 
 * collectors/memory - bugfix: cmd+interval strong typing
