@@ -31,6 +31,10 @@ Panoptimon::Util.os('-option' => config,
         swapped:   GB(i['SwapTotal'].to_i - i['SwapFree'].to_i),
         swap_free: GB(i['SwapFree']),
       }
+
+      out[:util] = (100.0 * (out[:total] - out[:free]) / out[:total]).
+        round(2) # TODO #71
+
       puts JSON::generate(out)
 
       break unless config.include?(:interval)
@@ -90,6 +94,10 @@ Panoptimon::Util.os('-option' => config,
         free:      GB(i['system_pages:freemem']),
         # TODO buffers / cached
       }.merge(deltas)
+
+      out[:util] = (100.0 * (out[:total] - out[:free]) / out[:total]).
+        round(2) # TODO #71
+
       puts JSON::generate(out)
     end
   },
