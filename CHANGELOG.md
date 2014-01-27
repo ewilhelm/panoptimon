@@ -1,3 +1,8 @@
+# 0.5.8
+
+* collectors/memory - calculate percent util
+* collectors/zfs    - calculate percent util
+
 # 0.5.7
 
 * collectors/service - smf parsing fix
