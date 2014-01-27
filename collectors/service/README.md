@@ -52,17 +52,21 @@ service FMRI.
   "interval": 60,
   "flaptime": 30,
   "since": 900,
+  "faults" : false,
   "services": {
-    "init": { "foo" : { "status_cmd" : "..."} }, # TODO
-    "systemd": { # TODO
-      "sshd" : {...}
-    },
     "daemontools": {
-      "-monitor" : ["/service/*"], # probably all you need
-      "-options" : { "svstat" : ["..."] },
+      "-monitor" : ["/service/*"], "#": "probably all you need",
+      "-options" : { "svstat" : [...] },
       "chef-client" : { },
-      "syslog-ng" : {"path" : "/service/syslog-ng"}, # is the default
-    }
+      "syslog-ng" : {
+        "path" : "/service/syslog-ng", "#": "is the default" },
+    },
+    "smf": {
+      "-monitor" : ["*"], "#": "very noisy",
+      "-options" : {"svcs" : ["sudo", "svcs"]},
+    },
+    "init":    { "foo" : { "status_cmd" : "..."} }, # TODO
+    "systemd": { "sshd" : {...} } # TODO
   }
 }
 ```
