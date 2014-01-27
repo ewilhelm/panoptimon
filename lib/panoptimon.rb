@@ -82,7 +82,7 @@ def self.load_options (args)
 
       opts.on('-v', '--version', "Print version"
       ) { 
-        puts "panoptimon version #{Panoptimon::VERSION}"
+        puts "panoptimon version #{VERSION}"
         o[:quit] = true
         opts.terminate
       }
