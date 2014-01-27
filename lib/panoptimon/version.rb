@@ -1,5 +1,5 @@
 # Copyright (C) 2012-2014 Cisco, Inc.
 
 module Panoptimon
-  VERSION = "0.5.6"
+  VERSION = "0.5.7"
 end

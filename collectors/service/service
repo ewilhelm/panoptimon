@@ -55,6 +55,7 @@ handler = {
         map {|svc|
           info = svc.match(%r{
             \A(?<fmri>\S+)\s.*?\n
+            (?:\s+.*?\)\n)?
             \s+State:\s+(?<state>\S+)\s+
               since\s+(?<date>.*?)\n
           }x) or raise "cannot parse #{svc}"

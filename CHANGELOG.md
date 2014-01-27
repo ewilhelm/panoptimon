@@ -1,3 +1,7 @@
+# 0.5.7
+
+* collectors/service - smf parsing fix
+
 # 0.5.6
 
 * collectors/service - docs update

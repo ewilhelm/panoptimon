@@ -1,0 +1,9 @@
+#!/bin/sh
+
+cat << ENDING
+svc:/system/auditset:default (Set non-/attributable audit flags
+                                in the kernel context.)
+ State: online since January 26, 2014 03:31:36 PM UTC
+   See: /etc/svc/volatile/system-auditset:default.log
+Impact: None.
+ENDING
