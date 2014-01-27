@@ -73,8 +73,11 @@ IO.popen(zfs_cmd + ['list', '-H', '-o', 'name,used,avail'] +
   metrics.keys) {|fh|
   fh.readlines.each {|line|
     (pool, used, free) = line.split(/\s+/) 
-    metrics[pool][:used] = convert_GB[used]
-    metrics[pool][:free] = convert_GB[free]
+
+    usedG = metrics[pool][:used] = convert_GB[used]
+    freeG = metrics[pool][:free] = convert_GB[free]
+
+    metrics[pool][:util] = (100.0 * usedG/(usedG + freeG)).round(2)
   }
 }
 raise "zpool error - #{$?.exitstatus}" unless $?.success?
