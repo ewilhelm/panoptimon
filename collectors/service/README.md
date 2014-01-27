@@ -49,15 +49,15 @@ service FMRI.
 
 ```json
 {
-  interval: 60
-  flaptime: 30,
-  since: 900,
-  services: {
-    init: { foo : { status_cmd : "..."} }, # TODO
-    systemd: { # TODO
-      sshd : {...}
+  "interval": 60,
+  "flaptime": 30,
+  "since": 900,
+  "services": {
+    "init": { "foo" : { "status_cmd" : "..."} }, # TODO
+    "systemd": { # TODO
+      "sshd" : {...}
     },
-    daemontools: {
+    "daemontools": {
       "-monitor" : ["/service/*"], # probably all you need
       "-options" : { "svstat" : ["..."] },
       "chef-client" : { },
