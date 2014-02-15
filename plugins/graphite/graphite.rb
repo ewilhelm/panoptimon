@@ -14,14 +14,18 @@ prefix = config[:prefix] || '<%= host %>'
 
 prefix.gsub!(/<%= *(host|domain) *%>/) { hostname[$1] }
 
-# kludgy reconnect scheme will drop metrics on failure but avoid blocking
+# attempt to reconnect with buffering
+# (but avoid over-zealous connect attempts and memory leaks)
 writer = ->(){
   tries = 0
   buffer = []
+  defer = ->(line) {
+    buffer.push(line)
+    buffer = buffer.drop(50) if buffer.length > 100
+  }
   connect = ->() {
     tries += 1
     warn "tries: #{tries}"
-    buffer = buffer.drop(50) if buffer.length > 100
     return if tries > 3 and not(tries % 10 == 0)
     warn "reconnect"
     socket = TCPSocket.open(host, port)
@@ -33,12 +37,12 @@ writer = ->(){
   socket = connect[] # connect early -> fail early
   ->(line) {
     begin
-      socket ||= connect[] or return nil.tap { buffer.push(line) }
+      socket ||= connect[] or return nil.tap { defer.call(line) }
       socket.write(line)
     rescue => err
       warn "graphite error: #{err}"
       socket = nil
-      buffer.push(line)
+      defer.call(line)
     end
   }
 }[]
