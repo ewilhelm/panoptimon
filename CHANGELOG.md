@@ -1,3 +1,7 @@
+# 0.5.9
+
+* collectors/graphite - feature: reconnect and resend
+
 # 0.5.8
 
 * collectors/memory - calculate percent util
