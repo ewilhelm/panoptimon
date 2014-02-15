@@ -1,3 +1,7 @@
+# 0.6.0
+
+* bugfix: `panoptimon --version` correction
+
 # 0.5.9
 
 * collectors/graphite - feature: reconnect and resend
