@@ -14,24 +14,20 @@ prefix = config[:prefix] || '<%= host %>'
 
 prefix.gsub!(/<%= *(host|domain) *%>/) { hostname[$1] }
 
-# attempt to reconnect with buffering
-# (but avoid over-zealous connect attempts and memory leaks)
+# attempt to reconnect and resend
+# (but avoid over-zealous connect attempts or memory leaks)
+# (drops metrics if resend buffer is too large)
 writer = ->(){
-  tries = 0
   buffer = []
   defer = ->(line) {
     buffer.push(line)
     buffer = buffer.drop(50) if buffer.length > 100
   }
   connect = ->() {
-    tries += 1
-    warn "tries: #{tries}"
-    return if tries > 3 and not(tries % 10 == 0)
-    warn "reconnect"
+    return if buffer.length > 3 and not(buffer.length % 10 == 0)
     socket = TCPSocket.open(host, port)
-    buffer.each {|line| socket.write(line)}
-    buffer.clear
-    tries = 0
+    socket.write(buffer.slice!(0..buffer.length-1).join('')) \
+      if buffer.length > 0
     return socket
   }
   socket = connect[] # connect early -> fail early
