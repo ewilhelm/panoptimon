@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2014 Cisco, Inc.
+
+require 'json'
+require 'ostruct'
+
+require 'panoptimon/util'
+
+config = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 60}
+
+$stdout.sync = true
+
+get_stats = ->() {
+  Panoptimon::Util.os(
+    solaris: ->() {
+      ->() {
+	stats = %x[prstat -t 1 1].split("\n")[0..-2].map { |line|
+            line.gsub(/\s+/m, ' ').strip.split(" ")
+        };
+        stat_fields = stats.shift().map { |each| each.downcase };
+        stats.map { |stat| 
+            Hash[stat_fields[1..-1].zip(stat[1..-1])];
+        }
+      }
+    },
+  )
+
+}[]
+
+while(true) do
+  stats = get_stats[];
+  users = stats.map {|s| [ s["username"], s.tap{|u| u.delete("username")} ]};
+  puts JSON::generate(Hash[users]);
+
+  break unless config.include?('interval')
+  sleep config['interval']
+end
