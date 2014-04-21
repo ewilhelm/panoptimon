@@ -28,9 +28,10 @@ get_stats = ->() {
 
 while(true) do
   stats = get_stats[];
-  if (stats)
+  if stats
     puts JSON::generate(Hash[stats]);
-  else (puts "{}")
+  else
+    puts "{}"
   end
   break unless config.include?('interval')
   sleep config['interval']

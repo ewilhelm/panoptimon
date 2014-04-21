@@ -27,7 +27,7 @@ get_stats = ->() {
 
 }[]
 
-while(true) do
+loop do
   stats = get_stats[];
   users = stats.map {|s| [ s["username"], s.tap{|u| u.delete("username")} ]};
   puts JSON::generate(Hash[users]);
