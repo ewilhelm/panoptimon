@@ -6,7 +6,13 @@ require 'ostruct'
 
 require 'panoptimon/util'
 
-config = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 60, 'kstats' => []}
+config = ARGV[0] ? JSON::parse(ARGV[0]) : {}
+
+if (config.include?('kstats') && config['kstats'].length > 0)
+  kstats = config['kstats'].join(' ');
+else
+  fail "No kstats supplied"
+end
 
 $stdout.sync = true
 
@@ -14,20 +20,17 @@ get_stats = ->() {
   Panoptimon::Util.os(
     solaris: ->() {
       ->() {
-        if (config.include?('kstats') && config['kstats'].length > 0)
-          kstats = config['kstats'].join(' ');
-          stats = %x[kstat -p #{kstats}].split("\n").map { |line|
-            line.split("\t")
-          };
-        end
+      stats = %x[kstat -p #{kstats}].split("\n").map { |line|
+        line.gsub(/:/,"|").split("\t")
+      };
       }
     },
   )
-
 }[]
 
 while(true) do
   stats = get_stats[];
+  $?.success? or fail "kstat unhappy #{$?.exitstatus}"
   if stats
     puts JSON::generate(Hash[stats]);
   else
