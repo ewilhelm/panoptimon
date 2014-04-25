@@ -16,21 +16,20 @@ end
 
 $stdout.sync = true
 
-get_stats = ->() {
-  Panoptimon::Util.os(
+get_stats = Panoptimon::Util.os(
     solaris: ->() {
       ->() {
       stats = %x[kstat -p #{kstats}].split("\n").map { |line|
         line.gsub(/:/,"|").split("\t")
       };
+      $?.success? or fail "kstat unhappy #{$?.exitstatus}"
+      return stats
       }
     },
-  )
-}[]
+)
 
 while(true) do
   stats = get_stats[];
-  $?.success? or fail "kstat unhappy #{$?.exitstatus}"
   if stats
     puts JSON::generate(Hash[stats]);
   else

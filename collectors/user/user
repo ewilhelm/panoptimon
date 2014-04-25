@@ -11,33 +11,32 @@ config = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 60}
 $stdout.sync = true
 
 def numerize(stats)
-  ret = [];
   # stats is an array of strings
-  stats.each{ |stat|
+  stats.map{ |stat|
     if (/^\d+[KMG]$/ =~ stat)
       case
       when stat[-1] == 'K'
-        ret.push(Integer(stat[0..-2]))
+        Integer(stat[0..-2])
       when stat[-1] == 'M'
-        ret.push(Integer(stat[0..-2])*1024)
+        Integer(stat[0..-2])*1024
       when stat[-1] == 'G'
-        ret.push(Integer(stat[0..-2])*1024*1024)
+        Integer(stat[0..-2])*1024*1024
       end
     elsif (/\%$/ =~ stat)
-      ret.push(Float(stat[0..-2]));
+      Float(stat[0..-2])
     elsif (/^\d+:\d{2}:\d{2}$/ =~ stat)
       time = stat.split(":")
-      ret.push(Integer(time[0])*3600 +
-                 Integer(time[1])*60   +
-                 Integer(time[2]))
+      Integer(time[0])*3600 +
+        Integer(time[1])*60   +
+        Integer(time[2])
     elsif (/^\d+$/ =~ stat)
-      ret.push(Integer(stat))
+      Integer(stat)
     else
-      ret.push(stat);
+      stat
     end
   };
-  return ret;
 end
+
 get_stats = ->() {
   Panoptimon::Util.os(
     solaris: ->() {
@@ -45,9 +44,10 @@ get_stats = ->() {
 	stats = %x[prstat -t 1 1].split("\n")[0..-2].map { |line|
             line.gsub(/\s+/m, ' ').strip.split(" ")
         };
+        $?.success? or fail "prstat unhappy #{$?.exitstatus}"
         stat_fields = stats.shift().map { |each| each.downcase };
-        stats = stats.map { |each| numerize(each) }
-        stats.map { |stat| 
+        stats = stats.map { |each| numerize2(each) }
+        return stats.map { |stat| 
             Hash[stat_fields[1..-1].zip(stat[1..-1])];
         }
       }
@@ -58,7 +58,6 @@ get_stats = ->() {
 
 loop do
   stats = get_stats[];
-  $?.success? or fail "prstat unhappy #{$?.exitstatus}"
   users = stats.map {|s| [ s["username"], s.tap{|u| u.delete("username")} ]};
   puts JSON::generate(Hash[users]);
 
