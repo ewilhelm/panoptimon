@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2014 Cisco, Inc.
+
+require 'json'
+require 'ostruct'
+
+require 'panoptimon/util'
+
+config = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 60}
+
+$stdout.sync = true
+
+get_states = Panoptimon::Util.os(
+  solaris: ->() {
+    ->() {
+      statemap = {
+        'O' => 'running',
+        'S' => 'sleeping',
+        'R' => 'runnable',
+        'T' => 'stopped',
+        'W' => 'waiting',
+        'Z' => 'zombie' }
+
+      states = %x[ps -elf -o s].split("\n").map{ |s| statemap[s]
+        }.inject(Hash.new(0)) {|total, e| total[e] += 1 ;total}
+    }
+  },
+)
+
+loop do
+  states = get_states[];
+  puts JSON::generate(Hash[states]);
+
+  break unless config.include?('interval')
+  sleep config['interval']
+end
