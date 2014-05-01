@@ -46,7 +46,7 @@ get_stats = ->() {
         };
         $?.success? or fail "prstat unhappy #{$?.exitstatus}"
         stat_fields = stats.shift().map { |each| each.downcase };
-        stats = stats.map { |each| numerize2(each) }
+        stats = stats.map { |each| numerize(each) }
         return stats.map { |stat| 
             Hash[stat_fields[1..-1].zip(stat[1..-1])];
         }
