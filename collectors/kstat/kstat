@@ -17,15 +17,15 @@ end
 $stdout.sync = true
 
 get_stats = Panoptimon::Util.os(
-    solaris: ->() {
-      ->() {
-      stats = %x[kstat -p #{kstats}].split("\n").map { |line|
-        line.gsub(/:/,"|").split("\t")
-      };
-      $?.success? or fail "kstat unhappy #{$?.exitstatus}"
-      return Hash[stats]
-      }
-    },
+  solaris: ->() {
+    ->() {
+    stats = %x[kstat -p #{kstats}].split("\n").map { |line|
+      line.gsub(/:/,"|").split("\t")
+    };
+    $?.success? or fail "kstat unhappy #{$?.exitstatus}"
+    return Hash[stats]
+    }
+  },
 )
 
 while(true) do

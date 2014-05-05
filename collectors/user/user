@@ -25,7 +25,13 @@ def numerize(stats)
     elsif (/\%$/ =~ stat)
       Float(stat[0..-2])
     elsif (/^\d+:\d{2}:\d{2}$/ =~ stat)
-      time = stat.split(":")
+      time = stat.split(":").map { |each|
+        if (each.length > 1)
+          each.gsub(/^0/,"")
+        else
+          each
+        end
+      }
       Integer(time[0])*3600 +
         Integer(time[1])*60   +
         Integer(time[2])
@@ -37,24 +43,21 @@ def numerize(stats)
   };
 end
 
-get_stats = ->() {
-  Panoptimon::Util.os(
-    solaris: ->() {
-      ->() {
-	stats = %x[prstat -t 1 1].split("\n")[0..-2].map { |line|
-            line.gsub(/\s+/m, ' ').strip.split(" ")
-        };
-        $?.success? or fail "prstat unhappy #{$?.exitstatus}"
-        stat_fields = stats.shift().map { |each| each.downcase };
-        stats = stats.map { |each| numerize(each) }
-        return stats.map { |stat| 
-            Hash[stat_fields[1..-1].zip(stat[1..-1])];
-        }
+get_stats = Panoptimon::Util.os(
+  solaris: ->() {
+    ->() {
+      stats = %x[prstat -t 1 1].split("\n")[0..-2].map { |line|
+        line.gsub(/\s+/m, ' ').strip.split(" ")
+      };
+      $?.success? or fail "prstat unhappy #{$?.exitstatus}"
+      stat_fields = stats.shift().map { |each| each.downcase };
+      stats = stats.map { |each| numerize(each) }
+      return stats.map { |stat|
+          Hash[stat_fields[1..-1].zip(stat[1..-1])];
       }
-    },
-  )
-
-}[]
+    }
+  },
+)
 
 loop do
   stats = get_stats[];
