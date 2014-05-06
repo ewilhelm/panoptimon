@@ -1,0 +1,1 @@
+{"sysctls":["net.ipv4.tcp_reordering","net.sctp.sctp_mem","vm.numa_zonelist_order","vm.dirty_writeback_centisecs"],"interval":60}

@@ -1,0 +1,42 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2014 Cisco, Inc.
+
+require 'json'
+require 'panoptimon/util'
+
+config = ARGV[0] ? JSON::parse(ARGV[0]) : {}
+
+if (config.include?('sysctls') && config['sysctls'].length > 0)
+  sysctls = config['sysctls'].join(' ');
+else
+  fail "No sysctls supplied"
+end
+
+$stdout.sync = true
+
+get_sysctl = Panoptimon::Util.os(
+  linux: ->() {
+    ->() {
+    stats = %x[sysctl #{sysctls}].split("\n").map { |line|
+      line.gsub(/\./,"|").split("=").map { |field| field.strip }
+    }.map { |each|
+      begin
+        val = Integer(each[1])
+      rescue
+        val = each[1]
+      end
+      [each[0], val]
+    }
+    $?.success? or fail "sysctl unhappy #{$?.exitstatus}"
+    
+    return Hash[stats]
+    }
+  },
+)
+
+while(true) do
+  stats = get_sysctl[];
+  puts JSON::generate(stats);
+  break unless config.include?('interval')
+  sleep config['interval']
+end
