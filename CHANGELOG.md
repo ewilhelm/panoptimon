@@ -1,3 +1,8 @@
+# 0.6.1
+
+* collectors/procstate - state of processes on the system
+* collectors/kstat - solaris kstat collector
+
 # 0.6.0
 
 * bugfix: `panoptimon --version` correction

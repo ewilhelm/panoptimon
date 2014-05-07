@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2014 Cisco, Inc.
+
+require 'json'
+require 'ostruct'
+
+require 'panoptimon/util'
+
+config = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 60}
+
+$stdout.sync = true
+
+def numerize(stats)
+  # stats is an array of strings
+  stats.map{ |stat|
+    if (/^\d+[KMG]$/ =~ stat)
+      case
+      when stat[-1] == 'K'
+        Integer(stat[0..-2])
+      when stat[-1] == 'M'
+        Integer(stat[0..-2])*1024
+      when stat[-1] == 'G'
+        Integer(stat[0..-2])*1024*1024
+      end
+    elsif (/\%$/ =~ stat)
+      Float(stat[0..-2])
+    elsif (/^\d+:\d{2}:\d{2}$/ =~ stat)
+      time = stat.split(":").map { |each|
+        if (each.length > 1)
+          each.gsub(/^0/,"")
+        else
+          each
+        end
+      }
+      Integer(time[0])*3600 +
+        Integer(time[1])*60   +
+        Integer(time[2])
+    elsif (/^\d+$/ =~ stat)
+      Integer(stat)
+    else
+      stat
+    end
+  };
+end
+
+get_stats = Panoptimon::Util.os(
+  solaris: ->() {
+    ->() {
+      stats = %x[prstat -t 1 1].split("\n")[0..-2].map { |line|
+        line.gsub(/\s+/m, ' ').strip.split(" ")
+      };
+      $?.success? or fail "prstat unhappy #{$?.exitstatus}"
+      stat_fields = stats.shift().map { |each| each.downcase };
+      stats = stats.map { |each| numerize(each) }
+      return stats.map { |stat|
+          Hash[stat_fields[1..-1].zip(stat[1..-1])];
+      }
+    }
+  },
+)
+
+loop do
+  stats = get_stats[];
+  users = stats.map {|s| [ s["username"], s.tap{|u| u.delete("username")} ]};
+  puts JSON::generate(Hash[users]);
+
+  break unless config.include?('interval')
+  sleep config['interval']
+end

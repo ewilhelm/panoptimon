@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2014 Cisco, Inc.
+
+require 'json'
+require 'ostruct'
+
+require 'panoptimon/util'
+
+config = ARGV[0] ? JSON::parse(ARGV[0]) : {}
+
+if (config.include?('kstats') && config['kstats'].length > 0)
+  kstats = config['kstats'].join(' ');
+else
+  fail "No kstats supplied"
+end
+
+$stdout.sync = true
+
+get_stats = Panoptimon::Util.os(
+  solaris: ->() {
+    ->() {
+    stats = %x[kstat -p #{kstats}].split("\n").map { |line|
+      line.gsub(/:/,"|").split("\t")
+    };
+    $?.success? or fail "kstat unhappy #{$?.exitstatus}"
+    return Hash[stats]
+    }
+  },
+)
+
+while(true) do
+  stats = get_stats[];
+  puts JSON::generate(stats);
+  break unless config.include?('interval')
+  sleep config['interval']
+end

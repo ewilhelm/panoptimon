@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+# Copyright (C) 2014 Cisco, Inc.
+
+require 'json'
+
+require 'panoptimon/util'
+
+config = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 60}
+
+$stdout.sync = true
+
+get_states = ->() {
+  statemap = {
+    'O' => 'running',
+    'S' => 'sleeping',
+    'R' => 'runnable',
+    'T' => 'stopped',
+    'W' => 'waiting',
+    'Z' => 'zombie' }
+
+  states = %x[ps -e -o s].split("\n").map{ |s| statemap[s]
+    }.inject(Hash.new(0)) {|total, e| total[e] += 1 ;total}
+}
+
+loop do
+  puts JSON::generate(get_states[]);
+
+  break unless config.include?('interval')
+  sleep config['interval']
+end
