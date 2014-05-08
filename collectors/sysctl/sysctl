@@ -3,33 +3,32 @@
 
 require 'json'
 require 'panoptimon/util'
+require 'panoptimon/util/string-with-as_number'
 
 config = ARGV[0] ? JSON::parse(ARGV[0]) : {}
+fail "no sysctls supplied" unless config['sysctls'].length >0
 
-if (config.include?('sysctls') && config['sysctls'].length > 0)
-  sysctls = config['sysctls'].join(' ');
-else
-  fail "No sysctls supplied"
-end
+sysctls = config['sysctls'].join(' ');
 
 $stdout.sync = true
 
 get_sysctl = Panoptimon::Util.os(
   linux: ->() {
     ->() {
-    stats = %x[sysctl #{sysctls}].split("\n").map { |line|
-      line.gsub(/\./,"|").split("=").map { |field| field.strip }
-    }.map { |each|
-      begin
-        val = Integer(each[1])
-      rescue
-        val = each[1]
-      end
-      [each[0], val]
-    }
-    $?.success? or fail "sysctl unhappy #{$?.exitstatus}"
-    
-    return Hash[stats]
+      info = {};
+      stats = %x[sysctl #{sysctls}].split("\n").map { |line|
+        line.gsub(/\./,"|").split("=").map { |field| field.strip }
+      }.map { |each|
+        if (each[1].as_number)
+          [each[0], each[1].as_number]
+        else
+          info[each[0]] = each[1]
+          []
+        end
+      }
+      $?.success? or fail "sysctl unhappy #{$?.exitstatus}"
+
+      return Hash[ stats + [[:_info, info]] ]
     }
   },
 )
