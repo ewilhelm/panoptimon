@@ -1,3 +1,6 @@
+
+* collectors/disk - configurable skip dev or type, skip iso9660 + udf
+
 # 0.6.1
 
 * collectors/procstate - state of processes on the system
