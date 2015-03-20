@@ -15,21 +15,23 @@ def GB b; (b.to_f / 1024**3).round(6); end # GB significant down to 4kB
 class Array; def to_h; Hash[self]; end; end
 
 get_mounts = ->() {
-  skip = %w[devpts udev sysfs tmpfs none proc cgroup swap lxproc objfs ctfs lofs
+  skip_mnt = %w[none
+    ].map {|t| [t,true]}.to_h
+  skip_type = %w[devpts udev sysfs tmpfs none proc cgroup swap lxproc objfs ctfs lofs
     ].map {|t| [t,true]}.to_h
   Panoptimon::Util.os(
     linux: ->() {
       ->() {
         mounts = File.open("/etc/mtab", "r").read.split("\n").
           map{|l| x = l.split(/\s+/); [x[1], x[0]]}.to_h.
-          keep_if {|k,v| not(skip[v])}
+          keep_if {|k,v| not(skip_mnt[v])}
       }
     },
     solaris: ->() {
       ->() {
         mounts = File.open("/etc/mnttab", "r").read.split("\n").
           map{|l| x = l.split(/\s+/); [x[1], x[0], x[2]]}.
-          keep_if {|p| not(skip[p[1]]) and not(skip[p[2]])}.
+          keep_if {|p| not(skip_mnt[p[1]]) and not(skip_type[p[2]])}.
           map {|p| [p[0], p[1]]}.to_h
       }
     },
