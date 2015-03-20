@@ -22,9 +22,9 @@ get_mounts = ->() {
   mtab = Panoptimon::Util.os( linux: '/etc/mtab', solaris: '/etc/mnttab')
 
   File.open(mtab, "r").read.split("\n").
-          map{|l| x = l.split(/\s+/); [x[1], x[0], x[2]]}.
-          keep_if {|p| not(skip_mnt[p[1]]) and not(skip_type[p[2]])}.
-          map {|p| [p[0], p[1]]}.to_h
+    map{|l| x = l.split(/\s+/); [x[1], x[0], x[2]]}.
+    keep_if {|p| not(skip_mnt[p[1]]) and not(skip_type[p[2]])}.
+    map {|p| [p[0], p[1]]}.to_h
 }[]
 
 def stat_fs (mounts)
