@@ -19,7 +19,7 @@ get_mounts = ->() {
     %w[none udev proc mnttab objfs ctfs cgroup
     ]).map {|t| [t,true]}.to_h
   skip_type = ((config[:skip_type]||[]) +
-    %w[devpts sysfs tmpfs swap lxproc lofs udf isso9660
+    %w[devpts sysfs tmpfs swap lxproc lofs udf iso9660
     ]).map {|t| [t,true]}.to_h
   mtab = Panoptimon::Util.os('-option' => config,
     linux: '/etc/mtab', solaris: '/etc/mnttab')
