@@ -6,7 +6,7 @@ require 'ostruct'
 
 require 'panoptimon/util'
 
-config = ARGV[0] ? JSON::parse(ARGV[0]) : {'interval' => 60}
+config = ARGV[0] ? JSON::parse(ARGV[0], {symbolize_names: true}) : {'interval' => 60}
 
 $stdout.sync = true
 
@@ -15,17 +15,20 @@ def GB b; (b.to_f / 1024**3).round(6); end # GB significant down to 4kB
 class Array; def to_h; Hash[self]; end; end
 
 get_mounts = ->() {
-  skip_mnt = %w[none
-    ].map {|t| [t,true]}.to_h
-  skip_type = %w[devpts udev sysfs tmpfs proc cgroup swap lxproc objfs ctfs lofs
-    ].map {|t| [t,true]}.to_h
-  mtab = Panoptimon::Util.os( linux: '/etc/mtab', solaris: '/etc/mnttab')
+  skip_dev = ((config[:skip_dev]||[]) +
+    %w[none udev proc mnttab objfs ctfs cgroup
+    ]).map {|t| [t,true]}.to_h
+  skip_type = ((config[:skip_type]||[]) +
+    %w[devpts sysfs tmpfs swap lxproc lofs udf isso9660
+    ]).map {|t| [t,true]}.to_h
+  mtab = Panoptimon::Util.os('-option' => config,
+    linux: '/etc/mtab', solaris: '/etc/mnttab')
 
   File.open(mtab, "r").read.split("\n").
-    map{|l| x = l.split(/\s+/); [x[1], x[0], x[2]]}.
-    keep_if {|p| not(skip_mnt[p[1]]) and not(skip_type[p[2]])}.
-    map {|p| [p[0], p[1]]}.to_h
-}[]
+    map{|l| l.split(/\s+/).values_at(1,0,2)}.
+    keep_if {|p| not(skip_dev[p[1]]) and not(skip_type[p[2]])}.
+    map {|p| p[0..1]}.to_h
+}
 
 def stat_fs (mounts)
   s = %x[stat --printf="%n %S %b %f %a %c %d\n" -f #{mounts.keys.join(' ')}].split("\n")
