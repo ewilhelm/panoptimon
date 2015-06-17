@@ -25,12 +25,12 @@ module Panoptimon
       end
 
       def request
-        crass = {
+        what = {
           head: ::Net::HTTP::Head,
           get:  ::Net::HTTP::Get,
         }[method]
-        raise "method #{method} not implemented" unless crass
-        crass.new(uri.request_uri)
+        raise "method #{method} not implemented" unless what
+        what.new(uri.request_uri)
       end
       
       def certificate_info (cert, now=Time.now)
