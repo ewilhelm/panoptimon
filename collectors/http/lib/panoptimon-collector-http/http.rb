@@ -7,7 +7,7 @@ module Panoptimon
   module Collector
     class HTTP
       
-      attr_reader :uri, :use_ssl, :timeout, :match, :method
+      attr_reader :uri, :use_ssl, :timeout, :match, :header, :method
       def initialize(uri, opt = {})
         @uri = URI(uri)
         @use_ssl = @uri.scheme == 'https'
@@ -15,6 +15,7 @@ module Panoptimon
         @match   = opt[:match] ? %r{#{opt[:match]}} : nil
         @method  = opt[:method].downcase.to_sym
         @method = :get if @method == :head and @match
+        @header = opt[:header] || {}
       end
 
       def connect
@@ -30,7 +31,9 @@ module Panoptimon
           get:  ::Net::HTTP::Get,
         }[method]
         raise "method #{method} not implemented" unless what
-        what.new(uri.request_uri)
+        what.new(uri.request_uri,
+          Hash[ header.map {|k,v| [k.to_s, v] } ]
+        )
       end
       
       def certificate_info (cert, now=Time.now)
@@ -57,7 +60,8 @@ module Panoptimon
         return ans.merge({timeout: true}) unless response
 
         ans.merge!({
-          content_length: response.header.content_length,
+          content_length: response.header.content_length ||
+            response.body ? response.body.length : nil,
           code:           response.code,
         })
         ans[:ssl] = certificate_info(connect.peer_cert) if use_ssl
