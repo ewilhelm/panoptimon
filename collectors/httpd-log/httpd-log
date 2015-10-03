@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'timeout'
+
+defaults = {
+  timeout: 30,
+}
+
+ARGV[0] or fail "arguments required"
+conf = defaults.merge(JSON.parse(ARGV[0], {symbolize_names: true}))
+warn "timeout: #{conf[:timeout]}"
+
+fail "must have 'file' value in config" unless conf[:file]
+fail "timeout too short" if conf[:timeout] <= 3
+
+parse = ->() {
+  matcher = Regexp.new(
+    (['([^ ]+)'] * 3 + [
+    '\[([^\]]+)\]', # date
+     '"([^ ]+)', # method
+     '([^ ]+)',  # path
+     '([^ ]+)"', # type
+     '(\d+)', '(\d+)']).join(' '))
+  fields = Hash[->(){n=0;
+    %w(host ident user date method path type code size).map {|x| [x,n+=1]}
+  }[]]
+  ->(line) {
+    m = matcher.match(line)
+    d = Hash[fields.keys.map {|k| [k,m[fields[k]]]}]
+    warn d
+    return d
+  }
+}[]
+
+# Just kill the tail process and restart so we'll keep tail honest and
+# also report before our configured timeout.
+while(true) do
+  p = IO.popen(['tail', '-n','0', '-F', conf[:file]], 'r')
+  begin
+    while(true) do
+      i = ::Timeout::timeout(2) { parse[p.readline] } or break
+    end
+  rescue Timeout::Error
+    puts "{}"
+    next
+  end
+end
