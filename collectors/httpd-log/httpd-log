@@ -4,8 +4,14 @@ require 'json'
 require 'timeout'
 
 defaults = {
-  timeout: 30,
+  timeout: 70,
+  interval: 60,
+  report_path: '/',
+  report_periods: ['15m', '1h', '1d'],
+  state_file: '/var/run/panoptimon/httpd-log-state.json',
 }
+
+# put_1d: 1800, max_put_1d: 600, _data: {user_stats: { bob: {put_1d: 600, ...}}}
 
 ARGV[0] or fail "arguments required"
 conf = defaults.merge(JSON.parse(ARGV[0], {symbolize_names: true}))
@@ -28,18 +34,21 @@ parse = ->() {
   ->(line) {
     m = matcher.match(line)
     d = Hash[fields.keys.map {|k| [k,m[fields[k]]]}]
-    warn d
     return d
   }
 }[]
 
 # Just kill the tail process and restart so we'll keep tail honest and
 # also report before our configured timeout.
+# NOTE: ignoring the parsed date, assume it happened now.  Should be
+# true because we start tail with zero lines of output.  This might be a
+# problem where requests sneak past at restart on very lightly loaded
+# nodes.
 while(true) do
   p = IO.popen(['tail', '-n','0', '-F', conf[:file]], 'r')
   begin
     while(true) do
-      i = ::Timeout::timeout(2) { parse[p.readline] } or break
+      d = ::Timeout::timeout(2) { parse[p.readline] } or break
     end
   rescue Timeout::Error
     puts "{}"
