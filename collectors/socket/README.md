@@ -12,7 +12,7 @@ Connect to arbitrary TCP & UNIX sockets and match output. Input is expected to b
       "query": "show info",
       "match": ".*"
     },
-    "cloudysunday": {
+    "sshd": {
       "path": "localhost",
       "port": 22,
       "timeout": 5,
@@ -31,6 +31,6 @@ automatically determine the type (TCP vs Unix) of check.
 
 **Match:** Parse the output ensuring it includes the given match string.
 
-**Query (Unix Only):** Input to a given a socket.
+**Query:** Optional input to a given a socket.
 
 **Port (TCP Only):** Port to connect to (default: 80).

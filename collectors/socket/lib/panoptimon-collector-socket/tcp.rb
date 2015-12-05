@@ -25,7 +25,9 @@ module Panoptimon
         end
 
         def get_banner
-          TCPSocket.new(host, port).recv(100)
+          s = TCPSocket.new(host, port)
+          s.puts(query) if query
+          s.recv(100)
         end
 
       end
