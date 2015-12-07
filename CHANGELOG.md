@@ -1,4 +1,5 @@
 
+* collectors/http - support `"header":{...}` hash for request headers.
 * collectors/disk - configurable skip dev or type, skip iso9660 + udf
 
 # 0.6.1
