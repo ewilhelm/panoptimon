@@ -4,12 +4,13 @@ require 'panoptimon-collector-socket/unix'
 module Panoptimon
   module Collector
     class Socket
-      attr_accessor :path, :timeout, :match
+      attr_accessor :path, :timeout, :match, :query
 
       def initialize(options={})
         @path    = options[:path]    || defaults[:path]
         @match   = options[:match]   || defaults[:match]
         @timeout = options[:timeout] || defaults[:timeout]
+        @query   = options[:query]   || defaults[:query]
         return options
       end
 
