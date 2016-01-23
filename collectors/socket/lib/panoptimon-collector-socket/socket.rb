@@ -26,9 +26,9 @@ module Panoptimon
       def run
         out = begin
           a = Timeout::timeout(timeout.to_i) { get_banner }
-          {status: a.match(match) ? true : false}
+          {status: a.match(match) ? true : false, timeout: false}
         rescue Timeout::Error
-          {timeout: true}
+          {timeout: true, status: false}
         end
 
         out
