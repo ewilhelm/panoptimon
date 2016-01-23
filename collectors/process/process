@@ -36,7 +36,7 @@ ps = ['ps']
 fields = %w(pid time etime pcpu nice pri vsz rss args)
 
 # TODO discover whether our ps supports it -- and do that efficiently?
-fields.push('thcount') if Panoptimon::Util.os == :linux
+fields.push('nlwp') if Panoptimon::Util.os == :linux
 
 fieldcount = fields.length
 
@@ -48,7 +48,7 @@ convert = ->(){
     d.to_i * 24 * 60**2 + h.to_i * 60**2 + m.to_i * 60 + s.to_i}
   {
     pcpu: to_f, time: to_sec, etime: to_sec, pid: to_i,
-    thcount: to_i, pri: to_i, rss: to_i, nice: to_i, vsz: to_i
+    nlwp: to_i, pri: to_i, rss: to_i, nice: to_i, vsz: to_i
   }
 }[]
 
