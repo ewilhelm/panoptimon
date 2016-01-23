@@ -1,4 +1,5 @@
 
+* collectors/process - s/thcount/nwlp/ metric renamed
 * collectors/http - support `"header":{...}` hash for request headers.
 * collectors/disk - configurable skip dev or type, skip iso9660 + udf
 
