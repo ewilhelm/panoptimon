@@ -1,12 +1,12 @@
 
 * collectors/process - s/thcount/nwlp/ metric renamed
-* collectors/http - support `"header":{...}` hash for request headers.
-* collectors/disk - configurable skip dev or type, skip iso9660 + udf
+* collectors/http    - support `"header":{...}` hash for request headers.
+* collectors/disk    - configurable skip dev or type, skip iso9660 + udf
 
 # 0.6.1
 
 * collectors/procstate - state of processes on the system
-* collectors/kstat - solaris kstat collector
+* collectors/kstat     - solaris kstat collector
 
 # 0.6.0
 
