@@ -1,4 +1,9 @@
+# 0.7.0
 
+* plugins/riemann-stream - retry/failure fixes
+
+* collectors/socket  - tcp, status+timeout consistency
+* collectors/sysctl  - new
 * collectors/process - s/thcount/nwlp/ metric renamed
 * collectors/http    - support `"header":{...}` hash for request headers.
 * collectors/disk    - configurable skip dev or type, skip iso9660 + udf
